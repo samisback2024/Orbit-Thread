@@ -1,36 +1,101 @@
 # Orbit Thread — Think Louder, Together.
 
-A full-stack real-time discussion platform built with React, Supabase, and Vercel.  
-Users create "Circles" (rooms), have real-time conversations, connect with others, and unlock premium features with a Verified badge.
+> **The social platform where ideas orbit and conversations thread.**
+
+A full-stack real-time social platform built with React, Supabase, and Vercel.  
+Users create "Circles" (rooms), have real-time conversations, connect with others, send DMs, discover nearby communities, and unlock premium features with a Verified badge.
+
+**End Goal:** A production-grade social network live at **[OrbitThread.com](https://www.orbitthread.com)** with native apps on **Google Play Store** and **Apple App Store** — a real, shipped product competing in the social space.
 
 ---
 
 ## Table of Contents
 
-1. [Live URL](#live-url)
-2. [Tech Stack](#tech-stack)
-3. [Architecture Overview](#architecture-overview)
-4. [Project Structure](#project-structure)
-5. [Design System](#design-system)
-6. [Features (Phase 1 — Complete)](#features-phase-1--complete)
-7. [Features (Phase 2 — Complete)](#features-phase-2--complete)
-8. [Database Schema](#database-schema)
-9. [Authentication Flow](#authentication-flow)
-10. [Real-Time Messaging](#real-time-messaging)
-11. [Environment Variables](#environment-variables)
-12. [Local Development](#local-development)
-13. [Deployment](#deployment)
-14. [Phase 3 Roadmap](#phase-3-roadmap)
-15. [Known Limitations](#known-limitations)
+1. [Vision & End Goal](#vision--end-goal)
+2. [Live URL](#live-url)
+3. [Tech Stack](#tech-stack)
+4. [Architecture Overview](#architecture-overview)
+5. [Project Structure](#project-structure)
+6. [Design System](#design-system)
+7. [Features (Phase 1 — Complete)](#features-phase-1--complete)
+8. [Features (Phase 2 — Complete)](#features-phase-2--complete)
+9. [Database Schema](#database-schema)
+10. [Authentication Flow](#authentication-flow)
+11. [Real-Time Messaging](#real-time-messaging)
+12. [Environment Variables](#environment-variables)
+13. [Local Development](#local-development)
+14. [Deployment](#deployment)
+15. [Phase 3 — Production Backend (Next)](#phase-3--production-backend-next)
+16. [Phase 4 — Launch OrbitThread.com Live](#phase-4--launch-orbitthreadcom-live)
+17. [Phase 5 — Native Mobile Apps (Android + iOS)](#phase-5--native-mobile-apps-android--ios)
+18. [Phase 6 — Scale to Real Social Platform](#phase-6--scale-to-real-social-platform)
+19. [Phase 7 — Monetization & Growth](#phase-7--monetization--growth)
+20. [Domain & Infrastructure Checklist](#domain--infrastructure-checklist)
+21. [App Store Submission Checklist](#app-store-submission-checklist)
+22. [Known Limitations (Current)](#known-limitations-current)
+23. [Credits](#credits)
+
+---
+
+## Vision & End Goal
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     ORBIT THREAD                                │
+│              "Think Louder, Together."                           │
+│                                                                 │
+│   ┌──────────┐   ┌──────────────┐   ┌──────────────────────┐   │
+│   │   WEB    │   │   ANDROID    │   │        iOS           │   │
+│   │ React    │   │  Play Store  │   │   App Store          │   │
+│   │ orbitthread│   │  Real App    │   │   Real App           │   │
+│   │ .com     │   │              │   │                      │   │
+│   └──────────┘   └──────────────┘   └──────────────────────┘   │
+│         │                │                     │                │
+│         └────────────────┼─────────────────────┘                │
+│                          ▼                                      │
+│              ┌──────────────────────┐                           │
+│              │   Supabase Backend   │                           │
+│              │  Auth · DB · Realtime│                           │
+│              │  Storage · Edge Fns  │                           │
+│              └──────────────────────┘                           │
+│                          │                                      │
+│              ┌──────────────────────┐                           │
+│              │   Stripe Payments    │                           │
+│              │   Push Notifications │                           │
+│              │   CDN · Analytics    │                           │
+│              └──────────────────────┘                           │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**What we're building — Facebook-scale ambition, indie-dev execution:**
+
+| What Facebook Has | Orbit Thread Equivalent     | Status          |
+| ----------------- | --------------------------- | --------------- |
+| News Feed         | Home Feed + Discover Tab    | ✅ Phase 2      |
+| Groups            | Circles (Rooms)             | ✅ Phase 1      |
+| Messenger         | Direct Messages (1:1 DMs)   | ✅ Phase 2 (UI) |
+| Friend Requests   | Connection System           | ✅ Phase 1 (UI) |
+| Reactions         | Emoji Reactions on Messages | ✅ Phase 1      |
+| Stories/Reels     | —                           | 🔜 Phase 6      |
+| Marketplace       | —                           | 🔜 Phase 7      |
+| Live Video        | Voice/Video Calls           | 🔜 Phase 5      |
+| Verified Badge    | Premium Verified ⭐         | ✅ Phase 2      |
+| Android App       | React Native / Expo         | 🔜 Phase 5      |
+| iOS App           | React Native / Expo         | 🔜 Phase 5      |
+| facebook.com      | **OrbitThread.com**         | 🔜 Phase 4      |
 
 ---
 
 ## Live URL
 
-0
-**Production:** Deployed on Vercel (auto-deploys from `main` branch)  
-**GitHub:** [github.com/samisback2024/Orbit-Thread](https://github.com/samisback2024/Orbit-Thread)  
-**Supabase Project:** `gpkhehcnsggwjejkwuyv`
+| Environment               | URL                                                                                    | Status     |
+| ------------------------- | -------------------------------------------------------------------------------------- | ---------- |
+| **Production (Vercel)**   | Auto-deploys from `main` branch                                                        | ✅ Live    |
+| **Target Domain**         | [www.OrbitThread.com](https://www.orbitthread.com)                                     | 🔜 Phase 4 |
+| **GitHub**                | [github.com/samisback2024/Orbit-Thread](https://github.com/samisback2024/Orbit-Thread) | ✅ Active  |
+| **Supabase Project**      | `gpkhehcnsggwjejkwuyv`                                                                 | ✅ Active  |
+| **Android (Google Play)** | Coming Soon                                                                            | 🔜 Phase 5 |
+| **iOS (App Store)**       | Coming Soon                                                                            | 🔜 Phase 5 |
 
 ---
 
@@ -401,52 +466,410 @@ npm run dev
 
 ---
 
-## Phase 3 Roadmap
+## Phase 3 — Production Backend (Next)
 
-### Priority 1 — Wire to Supabase
+> **Goal:** Replace all mocks and simulations with real Supabase-backed features. After this phase, every feature works with real data and real users.
 
-| Feature                     | Description                                                                                                                            | Complexity |
-| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| **Real connections**        | Replace `DEMO_USERS` mock with real user discovery from `profiles` table. Wire connection requests to `connections` table in Supabase. | Medium     |
-| **Persist DMs**             | Create `direct_messages` table in Supabase, wire realtime subscription, replace simulated replies with real delivery.                  | Medium     |
-| **Persist geo rooms**       | Add `radius`, `lat`, `lng` columns to `rooms` table. Query rooms by proximity server-side.                                             | Medium     |
-| **Supabase Storage images** | Move image uploads from base64 inline to `chat-files` Supabase Storage bucket. Store URL in `messages.image_url`.                      | Medium     |
-| **Real Stripe checkout**    | Replace simulated premium flow with Stripe Checkout → webhook → update `profiles.verified`.                                            | Medium     |
-| **Room member list**        | Show who's in a room, pull from `room_members` table.                                                                                  | Easy       |
+### 3.1 — Wire Real Connections to Supabase
 
-### Priority 2 — User Experience
+- [ ] Replace `DEMO_USERS` array with real user discovery from `profiles` table
+- [ ] Wire connection requests to `connections` table (pending → accepted → declined)
+- [ ] Show real "People" page with actual registered users
+- [ ] Real-time connection status updates via Supabase Realtime
+- [ ] Block/unblock user support
 
-| Feature              | Description                                                                         | Complexity |
-| -------------------- | ----------------------------------------------------------------------------------- | ---------- |
-| **Google OAuth**     | Enable in Supabase Auth → Providers → Google. Needs Google Cloud OAuth credentials. | Easy       |
-| **Password reset**   | Supabase supports magic link / reset email out of the box.                          | Easy       |
-| **User search**      | Search real users by name/handle from `profiles` table.                             | Easy       |
-| **Profile editing**  | Let users update name, bio, avatar color.                                           | Easy       |
-| **Error boundaries** | React error boundary to prevent blank screens on crashes.                           | Easy       |
+### 3.2 — Persist Direct Messages
 
-### Priority 3 — Advanced Features
+- [ ] Create `direct_messages` table in Supabase with RLS policies
+- [ ] Wire DM send/receive to real database writes
+- [ ] Supabase Realtime subscription for live DM delivery
+- [ ] Remove simulated auto-replies — real message delivery only
+- [ ] Unread message count badge on DM sidebar icon
+- [ ] Message read receipts (optional)
 
-| Feature                | Description                                           | Complexity |
-| ---------------------- | ----------------------------------------------------- | ---------- |
-| **Push notifications** | Browser push API + service worker for offline alerts. | Hard       |
-| **Voice/video calls**  | WebRTC peer-to-peer calling. Needs signaling server.  | Hard       |
-| **Admin dashboard**    | Manage users, rooms, reports. Separate admin role.    | Medium     |
-| **Custom domains**     | Point `orbitthread.app` or similar to Vercel.         | Easy       |
+### 3.3 — Persist Geo Rooms
 
-### Priority 4 — Code Quality
+- [ ] Add `radius`, `lat`, `lng` columns to `rooms` table
+- [ ] Replace `SEED_ROOMS` with real user-created discoverable rooms
+- [ ] Server-side proximity query using PostGIS or Haversine SQL function
+- [ ] Geo-filtered Discover tab pulls from real database
 
-| Task                      | Description                                                                            |
-| ------------------------- | -------------------------------------------------------------------------------------- |
-| **Split into components** | Break `OrbitThreadApp.jsx` into `AuthPage`, `Sidebar`, `RoomView`, `ProfilePage`, etc. |
-| **State management**      | Move from `useState` spaghetti to React Context or Zustand.                            |
-| **TypeScript migration**  | Add type safety to props, Supabase queries, state.                                     |
-| **CSS extraction**        | Move from template literal CSS to CSS Modules or Tailwind.                             |
-| **Testing**               | Add Vitest unit tests + Playwright E2E tests.                                          |
-| **CI/CD**                 | GitHub Actions for lint + test + deploy pipeline.                                      |
+### 3.4 — Image Upload via Supabase Storage
+
+- [ ] Create `chat-files` Supabase Storage bucket
+- [ ] Upload images to Storage instead of base64 inline
+- [ ] Store public URL in `messages.image_url` column
+- [ ] Image compression before upload (client-side, < 1MB)
+- [ ] Support image previews / thumbnails
+
+### 3.5 — Real Stripe Payment Integration
+
+- [ ] Create Stripe account and get API keys
+- [ ] Build Supabase Edge Function for Stripe Checkout session creation
+- [ ] Stripe webhook → Supabase Edge Function → update `profiles.verified`
+- [ ] Handle subscription renewal, cancellation, and failed payments
+- [ ] Receipt emails via Stripe
+- [ ] In-app purchase flow for mobile (Phase 5)
+
+### 3.6 — Google OAuth & Password Reset
+
+- [ ] Enable Google OAuth in Supabase Auth → Providers
+- [ ] Set up Google Cloud OAuth credentials (Client ID + Secret)
+- [ ] Add "Sign in with Google" button on auth page
+- [ ] Enable magic link / password reset email flow
+- [ ] Apple Sign-In (required for iOS App Store — Phase 5)
+
+### 3.7 — Server-Side Safety
+
+- [ ] Supabase Edge Functions for server-side profanity filtering
+- [ ] Rate limiting on message sends (Edge Function middleware)
+- [ ] Content moderation queue for reported messages
+- [ ] Email verification toggle (enable for production)
 
 ---
 
-## Known Limitations
+## Phase 4 — Launch OrbitThread.com Live
+
+> **Goal:** Get a real custom domain pointing to the live app. Users visit **OrbitThread.com** and use it like any real social platform.
+
+### 4.1 — Domain Setup
+
+| Step | Action              | Details                                                                                         |
+| ---- | ------------------- | ----------------------------------------------------------------------------------------------- |
+| 1    | **Buy domain**      | Purchase `orbitthread.com` from Namecheap, Google Domains, or Cloudflare Registrar (~$12/yr)    |
+| 2    | **Add to Vercel**   | Vercel Dashboard → Project → Settings → Domains → Add `orbitthread.com` + `www.orbitthread.com` |
+| 3    | **DNS records**     | Point nameservers to Vercel OR add A record (`76.76.21.21`) + CNAME (`cname.vercel-dns.com`)    |
+| 4    | **SSL certificate** | Vercel auto-provisions Let's Encrypt SSL — HTTPS works automatically                            |
+| 5    | **Verify**          | Visit `https://www.orbitthread.com` — should load the app                                       |
+
+### 4.2 — Production Hardening
+
+- [ ] Enable Supabase email verification for all signups
+- [ ] Set up Supabase custom SMTP (SendGrid / Resend / Postmark) for branded emails
+- [ ] Add `<meta>` tags for SEO: title, description, Open Graph, Twitter cards
+- [ ] Favicon + Apple touch icon + `manifest.json` for PWA
+- [ ] Add Google Analytics or Plausible for traffic tracking
+- [ ] Error tracking with Sentry (free tier)
+- [ ] Uptime monitoring (UptimeRobot or Better Uptime — free)
+
+### 4.3 — Legal Requirements
+
+- [ ] **Privacy Policy** page (required for app stores and GDPR)
+- [ ] **Terms of Service** page
+- [ ] **Cookie consent** banner (EU law if serving EU users)
+- [ ] **COPPA compliance** notice (if users could be under 13)
+- [ ] **Contact / Support** page or email
+
+### 4.4 — Pre-Launch Polish
+
+- [ ] Landing page / marketing homepage (hero section, feature cards, CTA)
+- [ ] Loading skeleton screens instead of blank states
+- [ ] 404 page with navigation back to home
+- [ ] Offline fallback page (service worker)
+- [ ] Performance audit (Lighthouse score > 90)
+- [ ] Accessibility audit (WCAG 2.1 AA)
+
+---
+
+## Phase 5 — Native Mobile Apps (Android + iOS)
+
+> **Goal:** Ship real native apps to Google Play Store and Apple App Store. Users download "Orbit Thread" on their phone and use it like Instagram, Facebook, or Twitter.
+
+### 5.1 — Technology Choice
+
+| Option                      | Pros                                                                                 | Cons                                          | Recommended      |
+| --------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------- | ---------------- |
+| **React Native + Expo**     | Shares React knowledge, one codebase for both platforms, huge ecosystem, OTA updates | Slightly less native feel                     | ✅ **Best fit**  |
+| **Capacitor (Ionic)**       | Wraps existing React web app, fastest to ship                                        | Performance limitations, feels like a webview | Good for v1 MVP  |
+| **Flutter**                 | Excellent performance, beautiful UI                                                  | New language (Dart), rewrite needed           | Overkill for now |
+| **Native (Swift + Kotlin)** | Maximum performance                                                                  | Two separate codebases, 2x development time   | Future option    |
+
+**Recommended path: React Native with Expo**
+
+- Reuse existing Supabase client, auth flow, and business logic
+- Expo handles app signing, builds, and store submissions
+- One codebase → Android APK + iOS IPA
+
+### 5.2 — Mobile App Project Setup
+
+```bash
+# Install Expo CLI
+npm install -g expo-cli
+
+# Create new Expo project alongside web app
+npx create-expo-app orbit-thread-mobile --template blank-typescript
+
+# Install shared dependencies
+cd orbit-thread-mobile
+npx expo install @supabase/supabase-js
+npx expo install @react-navigation/native @react-navigation/stack
+npx expo install react-native-screens react-native-safe-area-context
+npx expo install expo-notifications expo-image-picker expo-location
+npx expo install @react-native-async-storage/async-storage
+```
+
+### 5.3 — Mobile Feature Parity
+
+| Web Feature           | Mobile Equivalent                                   | Priority |
+| --------------------- | --------------------------------------------------- | -------- |
+| Auth (email/password) | Same Supabase Auth with AsyncStorage                | P0       |
+| Google OAuth          | Expo AuthSession + Google provider                  | P0       |
+| Home Feed + Discover  | React Navigation tabs + FlatList                    | P0       |
+| Room Chat (Realtime)  | Same Supabase Realtime, ScrollView                  | P0       |
+| Direct Messages       | Same DM system, push notifications                  | P0       |
+| Connections           | Same flow, haptic feedback on accept                | P1       |
+| Image Upload          | `expo-image-picker` → Supabase Storage              | P1       |
+| Geo Discovery         | `expo-location` → proximity filter                  | P1       |
+| Push Notifications    | `expo-notifications` + Supabase Edge Function       | P1       |
+| Premium/Stripe        | In-App Purchases (required by stores)               | P2       |
+| Voice/Video Calls     | WebRTC via `react-native-webrtc`                    | P2       |
+| Biometric Login       | `expo-local-authentication` (Face ID / fingerprint) | P2       |
+
+### 5.4 — Google Play Store Submission
+
+| Step | Action                  | Details                                                                                         |
+| ---- | ----------------------- | ----------------------------------------------------------------------------------------------- |
+| 1    | **Google Play Console** | Create account at [play.google.com/console](https://play.google.com/console) — one-time $25 fee |
+| 2    | **App listing**         | Title: "Orbit Thread", category: Social, description, screenshots (phone + tablet)              |
+| 3    | **Content rating**      | Complete IARC questionnaire (social app = Everyone 10+)                                         |
+| 4    | **Privacy Policy URL**  | Must link to `https://orbitthread.com/privacy`                                                  |
+| 5    | **Build APK/AAB**       | `eas build --platform android` (Expo EAS Build)                                                 |
+| 6    | **Internal testing**    | Upload AAB to Internal Testing track → test with 10+ users                                      |
+| 7    | **Closed testing**      | Open to 20-100 beta testers, collect feedback                                                   |
+| 8    | **Production release**  | Submit for review (typically 1-3 days for approval)                                             |
+| 9    | **Data safety form**    | Declare what data is collected (required since 2022)                                            |
+
+### 5.5 — Apple App Store Submission
+
+| Step | Action                       | Details                                                                                         |
+| ---- | ---------------------------- | ----------------------------------------------------------------------------------------------- |
+| 1    | **Apple Developer Program**  | Enroll at [developer.apple.com](https://developer.apple.com) — $99/year                         |
+| 2    | **Requires a Mac**           | Xcode is needed for iOS builds (or use Expo EAS Build cloud)                                    |
+| 3    | **App Store Connect**        | Create app listing: name, subtitle, keywords, screenshots (6.7" + 5.5")                         |
+| 4    | **Apple Sign-In**            | **REQUIRED** if you offer Google/social login — must also offer Apple Sign-In                   |
+| 5    | **In-App Purchases**         | Apple requires using their IAP system for digital goods (30% cut) — set up in App Store Connect |
+| 6    | **Build IPA**                | `eas build --platform ios` (Expo EAS Build handles signing)                                     |
+| 7    | **TestFlight**               | Upload build → invite beta testers via TestFlight                                               |
+| 8    | **App Review**               | Submit for review (typically 1-2 days, strict guidelines)                                       |
+| 9    | **Privacy nutrition labels** | Declare data collection practices in App Store Connect                                          |
+| 10   | **Age rating**               | Social apps typically rated 12+ or 17+ depending on content moderation                          |
+
+### 5.6 — Mobile Project Structure
+
+```
+orbit-thread/                    ← Existing web app (this repo)
+orbit-thread-mobile/             ← New React Native / Expo app
+├── app.json                     # Expo config (name, icons, splash)
+├── App.tsx                      # Root navigation
+├── src/
+│   ├── navigation/
+│   │   ├── AuthStack.tsx        # Login / Signup / Onboard screens
+│   │   ├── MainTabs.tsx         # Home / Discover / DMs / Profile tabs
+│   │   └── RoomStack.tsx        # Room → Chat flow
+│   ├── screens/
+│   │   ├── LoginScreen.tsx
+│   │   ├── SignupScreen.tsx
+│   │   ├── OnboardScreen.tsx
+│   │   ├── HomeScreen.tsx
+│   │   ├── DiscoverScreen.tsx
+│   │   ├── RoomChatScreen.tsx
+│   │   ├── DMScreen.tsx
+│   │   ├── ProfileScreen.tsx
+│   │   └── SettingsScreen.tsx
+│   ├── components/
+│   │   ├── RoomCard.tsx
+│   │   ├── MessageBubble.tsx
+│   │   ├── Avatar.tsx
+│   │   ├── ConnectionButton.tsx
+│   │   └── VerifiedBadge.tsx
+│   ├── lib/
+│   │   ├── supabase.ts          # Shared Supabase client
+│   │   ├── auth.ts              # Auth helpers
+│   │   └── notifications.ts    # Push notification setup
+│   ├── hooks/
+│   │   ├── useAuth.ts
+│   │   ├── useRealtime.ts
+│   │   └── useLocation.ts
+│   └── theme/
+│       └── colors.ts            # Orbit Thread design tokens
+├── assets/
+│   ├── icon.png                 # App icon (1024x1024)
+│   ├── splash.png               # Splash screen
+│   └── adaptive-icon.png        # Android adaptive icon
+└── eas.json                     # EAS Build config
+```
+
+---
+
+## Phase 6 — Scale to Real Social Platform
+
+> **Goal:** Add the features that make a social network sticky and competitive — the features that keep users coming back daily.
+
+### 6.1 — Feed & Content
+
+- [ ] **User posts / status updates** — text + image posts on your profile (like Facebook wall)
+- [ ] **News Feed algorithm** — show posts from connections + trending rooms
+- [ ] **Stories** — 24-hour disappearing photo/video posts
+- [ ] **Hashtags & trending topics** — discover content by tag
+- [ ] **Content bookmarks / saves** — save posts and messages to revisit
+- [ ] **Share / repost** — amplify posts to your connections
+
+### 6.2 — Social Graph
+
+- [ ] **Mutual connections** — "You and Alex have 5 mutual connections"
+- [ ] **Connection suggestions** — "People you may know" based on topics + location
+- [ ] **Follow vs Connect** — public follow (one-way) + private connect (two-way)
+- [ ] **User verification** — official verification for public figures (beyond premium)
+
+### 6.3 — Communication
+
+- [ ] **Group DMs** — multi-person direct message threads
+- [ ] **Voice messages** — record and send audio clips in chat
+- [ ] **Voice/Video calls** — WebRTC peer-to-peer calling with signaling server
+- [ ] **Screen sharing** — in-call screen share for collaboration
+- [ ] **Message search** — full-text search across all messages
+
+### 6.4 — Media & Rich Content
+
+- [ ] **Photo albums** — upload multiple images to a post
+- [ ] **Video upload** — short-form video support
+- [ ] **Link previews** — auto-fetch Open Graph data for shared URLs
+- [ ] **GIF picker** — Giphy / Tenor integration in chat
+- [ ] **File sharing** — documents, PDFs in rooms and DMs
+- [ ] **Profile photos** — upload real avatar images (Supabase Storage)
+
+### 6.5 — Community & Moderation
+
+- [ ] **Report system** — report messages, users, rooms for review
+- [ ] **Admin dashboard** — manage users, rooms, reports, analytics
+- [ ] **Moderator roles** — room-level moderators with kick/mute powers
+- [ ] **Content filtering AI** — ML-based content moderation (OpenAI Moderation API)
+- [ ] **User blocking** — block users from contacting or seeing your content
+- [ ] **Mute notifications** — per-room and per-user mute
+
+### 6.6 — Performance & Infrastructure
+
+- [ ] **CDN for images** — Cloudflare or Vercel Image Optimization
+- [ ] **Database indexing** — optimize queries for 10K+ users
+- [ ] **Connection pooling** — Supabase connection pooler (PgBouncer)
+- [ ] **Edge functions** — move heavy logic server-side
+- [ ] **Caching layer** — Redis for frequently accessed data
+- [ ] **Database backups** — automated daily backups
+
+---
+
+## Phase 7 — Monetization & Growth
+
+> **Goal:** Build a sustainable business around Orbit Thread.
+
+### 7.1 — Revenue Streams
+
+| Stream                   | Model                                       | Implementation              |
+| ------------------------ | ------------------------------------------- | --------------------------- |
+| **Orbit Verified**       | $4.99/mo or $29.99/yr subscription          | Stripe (web) + IAP (mobile) |
+| **Orbit Pro (Creators)** | $14.99/mo — analytics, scheduling, priority | Stripe + IAP                |
+| **Promoted Rooms**       | Pay to feature your room in Discover        | Stripe                      |
+| **In-app tipping**       | Tip users in rooms (platform takes 15%)     | Stripe Connect              |
+| **Ads (optional)**       | Non-intrusive sponsored content in feed     | Google AdMob (mobile)       |
+
+### 7.2 — Growth Strategy
+
+- [ ] **Invite system** — "Invite 3 friends, unlock custom themes"
+- [ ] **Social sharing** — share rooms / posts to Twitter, Instagram, WhatsApp
+- [ ] **SEO** — public room pages indexed by Google
+- [ ] **Content creator program** — attract influencers to host rooms
+- [ ] **University partnerships** — launch at college campuses
+- [ ] **Product Hunt launch** — get early adopter exposure
+- [ ] **App Store Optimization (ASO)** — keywords, screenshots, ratings
+
+### 7.3 — Analytics & Metrics
+
+| Metric                   | Tool                             | Why                 |
+| ------------------------ | -------------------------------- | ------------------- |
+| Daily Active Users (DAU) | Mixpanel / Amplitude             | Core growth metric  |
+| Retention (D1, D7, D30)  | Mixpanel                         | Measures stickiness |
+| Messages sent/day        | Supabase queries                 | Engagement health   |
+| Room creation rate       | Supabase queries                 | Content creation    |
+| Conversion to Premium    | Stripe Dashboard                 | Revenue metric      |
+| App Store ratings        | App Store Connect / Play Console | User satisfaction   |
+| Crash rate               | Sentry                           | Stability           |
+| Page load time           | Vercel Analytics                 | Performance         |
+
+---
+
+## Domain & Infrastructure Checklist
+
+> **Everything needed to go from side project to live production app.**
+
+### Accounts to Create
+
+| Account             | URL                             | Cost                  | Purpose                     |
+| ------------------- | ------------------------------- | --------------------- | --------------------------- |
+| Domain registrar    | namecheap.com or cloudflare.com | ~$12/yr               | Own `orbitthread.com`       |
+| Vercel (Pro)        | vercel.com                      | Free → $20/mo         | Web hosting + CDN           |
+| Supabase (Pro)      | supabase.com                    | Free → $25/mo         | Backend + database          |
+| Stripe              | stripe.com                      | Free (2.9% + 30¢/txn) | Payments                    |
+| Google Play Console | play.google.com/console         | $25 one-time          | Android app distribution    |
+| Apple Developer     | developer.apple.com             | $99/yr                | iOS app distribution        |
+| Expo (EAS)          | expo.dev                        | Free → $99/mo         | Mobile app builds           |
+| Sentry              | sentry.io                       | Free tier             | Error tracking              |
+| SendGrid / Resend   | sendgrid.com or resend.com      | Free tier             | Transactional emails        |
+| Google Cloud        | console.cloud.google.com        | Free                  | OAuth credentials           |
+| Cloudflare          | cloudflare.com                  | Free                  | DNS + DDoS protection + CDN |
+
+### Domain Configuration (Step by Step)
+
+```
+1. Buy orbitthread.com (Namecheap / Cloudflare — ~$12/yr)
+2. In Vercel Dashboard:
+   → Project Settings → Domains
+   → Add "orbitthread.com"
+   → Add "www.orbitthread.com"
+3. At your registrar, set DNS:
+   → A Record:     @    →  76.76.21.21
+   → CNAME Record: www  →  cname.vercel-dns.com
+4. Wait 5-30 minutes for DNS propagation
+5. Vercel auto-provisions SSL certificate
+6. Test: https://www.orbitthread.com ✅
+```
+
+---
+
+## App Store Submission Checklist
+
+### Required Assets
+
+| Asset                | Spec                                | Needed For  |
+| -------------------- | ----------------------------------- | ----------- |
+| App Icon             | 1024×1024 PNG, no transparency      | Both stores |
+| Feature Graphic      | 1024×500 PNG                        | Google Play |
+| Phone Screenshots    | 1290×2796 (6.7") + 1242×2208 (5.5") | App Store   |
+| Phone Screenshots    | 1080×1920 minimum                   | Google Play |
+| Tablet Screenshots   | 2048×2732 (12.9" iPad)              | App Store   |
+| Splash Screen        | 1284×2778 PNG                       | Both (Expo) |
+| Short description    | 80 characters max                   | Google Play |
+| Full description     | 4000 characters max                 | Both        |
+| Privacy Policy URL   | `https://orbitthread.com/privacy`   | Both        |
+| Terms of Service URL | `https://orbitthread.com/terms`     | Both        |
+| Support email        | support@orbitthread.com             | Both        |
+
+### Pre-Submission Checklist
+
+- [ ] App icon designed and exported at all required sizes
+- [ ] Screenshots captured on real devices / simulator
+- [ ] Privacy policy page live at orbitthread.com/privacy
+- [ ] Terms of service page live at orbitthread.com/terms
+- [ ] Content rating questionnaire completed
+- [ ] Data safety / privacy nutrition labels filled out
+- [ ] Apple Sign-In implemented (required if Google Sign-In is offered)
+- [ ] In-app purchases configured in App Store Connect / Play Console
+- [ ] App tested on physical devices (Android + iPhone)
+- [ ] Crash-free rate > 99%
+- [ ] No placeholder content or "lorem ipsum" in the app
+
+---
+
+## Known Limitations (Current)
 
 1. **Single-file architecture** — `OrbitThreadApp.jsx` is ~2943 lines. Works for rapid iteration but should be split for maintainability.
 2. **Mock users** — The "People" page shows hardcoded `DEMO_USERS`, not real users from the database.
@@ -459,6 +882,22 @@ npm run dev
 9. **Premium/Stripe is simulated** — No real payment flow. Needs Stripe Checkout + webhook integration.
 10. **Geo rooms not persisted** — Room radius/lat/lng not saved to Supabase yet. Seed rooms are hardcoded.
 11. **Call button** — Shows a UI mockup, no real WebRTC implementation.
+12. **No custom domain** — Currently on Vercel auto-generated URL. Needs `orbitthread.com` domain purchase + DNS setup.
+13. **No mobile apps** — Web only. Needs React Native / Expo project for Play Store + App Store.
+
+---
+
+## Execution Timeline (Estimated)
+
+| Phase      | What                      | Duration   | Milestone                                      |
+| ---------- | ------------------------- | ---------- | ---------------------------------------------- |
+| ✅ Phase 1 | Core web app              | Complete   | Auth, rooms, realtime chat, connections UI     |
+| ✅ Phase 2 | Discovery + DMs + Premium | Complete   | Geo rooms, DM UI, image upload, Verified badge |
+| 🔜 Phase 3 | Production backend        | 4-6 weeks  | All mocks replaced with real Supabase data     |
+| 🔜 Phase 4 | Launch OrbitThread.com    | 1-2 weeks  | Custom domain live, SEO, legal pages           |
+| 🔜 Phase 5 | Mobile apps               | 6-10 weeks | Android on Play Store, iOS on App Store        |
+| 🔜 Phase 6 | Scale features            | 8-12 weeks | Posts, stories, video calls, admin tools       |
+| 🔜 Phase 7 | Monetize & grow           | Ongoing    | Real revenue, marketing, user growth           |
 
 ---
 
@@ -466,3 +905,5 @@ npm run dev
 
 Built by **Sam** — Phase 1 & 2 completed February 2026.  
 Design philosophy: "Human-crafted warmth — feels like a premium notebook, not a cold SaaS dashboard."
+
+**End goal:** A live social platform at **OrbitThread.com** with native apps on **Google Play Store** and **Apple App Store** — not a portfolio project, a real product.

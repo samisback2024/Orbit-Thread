@@ -32,6 +32,10 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "./supabase";
+import { useConversations } from "./hooks/useConversations";
+import { useDirectMessages } from "./hooks/useDirectMessages";
+import { useSendDirectMessage } from "./hooks/useSendDirectMessage";
+import { createConversation } from "./lib/dm";
 
 // ── Profanity filter (same as v2, explained there) ──────────
 const BANNED = ["fuck","shit","ass","bitch","bastard","crap","piss","dick","cock","pussy","nigger","nigga","faggot","whore","slut","cunt","motherfucker","asshole","douchebag","bullshit","wanker","twat"];
@@ -107,13 +111,7 @@ const SEED_ROOMS = [
   { id:"sr8", name:"Space Economy",           desc:"Commercial space ventures and the next frontier.",                type:"public", creatorName:"Carlos Mendez",memberCount:21, topic:"Space Exploration", radius:99999, lat:28.57,  lng:-80.65  },
 ];
 
-// ── DM simulated replies ─────────────────────────────────────
-const DM_REPLIES = [
-  "That's a great point.",
-  "Interesting — tell me more.",
-  "Agreed.",
-  "Let's take this to a room!",
-];
+// ── DM_REPLIES removed — DMs are now fully persistent via Supabase ──
 
 // ── Discover topic filters ───────────────────────────────────
 const DISCOVER_TOPICS = ["All","AI Research","Climate Tech","Philosophy","Fintech","Quantum Computing","Urban Planning","Biotech","Space Exploration","Geopolitics","Neuroscience"];
@@ -1354,10 +1352,12 @@ export default function OrbitThreadApp() {
   const [publicRooms, setPublicRooms] = useState(SEED_ROOMS);
   const [joinedRooms, setJoinedRooms] = useState([]); // IDs of joined discover rooms
 
-  // ── PHASE 2: DMs ────────────────────────────────────────
-  const [activeDM, setActiveDM]       = useState(null); // userId
-  const [dmMessages, setDmMessages]   = useState({}); // { userId: [...messages] }
+  // ── PHASE 2: DMs (now fully persistent via Supabase) ────
+  const [activeConversationId, setActiveConversationId] = useState(null);
   const [dmMsg, setDmMsg]             = useState("");
+  const { conversations: dmConversations, loading: dmConvLoading, refresh: refreshConversations } = useConversations();
+  const { messages: dmRealMessages, loading: dmMsgsLoading, addOptimisticMessage } = useDirectMessages(activeConversationId);
+  const { send: sendDMMessage, sending: dmSending, error: dmSendError } = useSendDirectMessage();
 
   // ── PHASE 2: PREMIUM MODAL ──────────────────────────────
   const [showPremium, setShowPremium] = useState(false);
@@ -1633,30 +1633,26 @@ export default function OrbitThreadApp() {
     showToast("Left the room.");
   }, [showToast]);
 
-  // ── SEND DM ─────────────────────────────────────────────
-  // Supabase: direct_messages table with sender_id, receiver_id, content, created_at
-  // + supabase.channel('direct-messages') realtime subscription
-  const sendDM = useCallback(() => {
+  // ── SEND DM (fully persistent via Supabase) ────────────
+  const sendDM = useCallback(async () => {
     const text = dmMsg.trim();
-    if (!text || !activeDM) return;
+    if (!text || !activeConversationId) return;
     if (hasProfanity(text)) { setProfWarn(true); setTimeout(() => setProfWarn(false), 3000); return; }
-    const now = new Date().toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
-    const myMsg = { id: Date.now(), from: "me", content: text, time: now };
-    setDmMessages(prev => ({
-      ...prev,
-      [activeDM]: [...(prev[activeDM] || []), myMsg],
-    }));
     setDmMsg("");
-    // Simulate reply after 1.5s
-    setTimeout(() => {
-      const reply = DM_REPLIES[Math.floor(Math.random() * DM_REPLIES.length)];
-      const replyTime = new Date().toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
-      setDmMessages(prev => ({
-        ...prev,
-        [activeDM]: [...(prev[activeDM] || []), { id: Date.now(), from: activeDM, content: reply, time: replyTime }],
-      }));
-    }, 1500);
-  }, [dmMsg, activeDM]);
+    await sendDMMessage(activeConversationId, text, addOptimisticMessage);
+  }, [dmMsg, activeConversationId, sendDMMessage, addOptimisticMessage]);
+
+  // ── START DM CONVERSATION ───────────────────────────────
+  const startDMWithUser = useCallback(async (otherUserId) => {
+    try {
+      const { conversation } = await createConversation(otherUserId);
+      setActiveConversationId(conversation.id);
+      setView("messages");
+      refreshConversations();
+    } catch (err) {
+      console.error("Failed to start conversation:", err);
+    }
+  }, [refreshConversations]);
 
   // ── IMAGE ATTACH ────────────────────────────────────────
   // Supabase: supabase.storage.from('chat-files').upload(path, file) then store public URL in messages table
@@ -2556,33 +2552,36 @@ export default function OrbitThreadApp() {
                 </div>
               )}
 
-              {/* ── MESSAGES (DMs) ── */}
+              {/* ── MESSAGES (DMs) — Fully Persistent via Supabase ── */}
               {view === "messages" && (
                 <div className="dm-layout">
-                  {/* DM Sidebar — list of accepted connections */}
+                  {/* DM Sidebar — list of real conversations */}
                   <div className="dm-sidebar">
                     <div className="dm-sb-head">Messages</div>
                     <div className="dm-list">
-                      {acceptedUserIds.length === 0 ? (
+                      {dmConvLoading ? (
+                        <div className="dm-empty-sb">
+                          <div className="dm-empty-sb-text">Loading conversations...</div>
+                        </div>
+                      ) : dmConversations.length === 0 ? (
                         <div className="dm-empty-sb">
                           <div className="dm-empty-sb-ico">💬</div>
-                          <div className="dm-empty-sb-text">Connect with people first. Only accepted connections can be DM'd.</div>
+                          <div className="dm-empty-sb-text">No conversations yet. Connect with people and start a chat!</div>
                         </div>
                       ) : (
-                        DEMO_USERS.filter(u => acceptedUserIds.includes(u.id)).map(u => {
-                          const lastMsgs = dmMessages[u.id] || [];
-                          const lastMsg = lastMsgs[lastMsgs.length - 1];
+                        dmConversations.map(conv => {
+                          const ou = conv.other_user;
                           return (
-                            <div key={u.id} className={`dm-item${activeDM===u.id?" active":""}`} onClick={() => setActiveDM(u.id)}>
-                              <div className="av av-sm" style={{background:avatarGrad(u.hue)}}>
-                                {u.initials}
-                                <span className="pip pip-sm" style={{background:SC[u.status]}}></span>
+                            <div key={conv.id} className={`dm-item${activeConversationId===conv.id?" active":""}`} onClick={() => setActiveConversationId(conv.id)}>
+                              <div className="av av-sm" style={{background:ou.avatar_color || "linear-gradient(135deg,#E8845A,#C4624A)"}}>
+                                {ou.initials || "??"}
+                                <span className="pip pip-sm" style={{background:SC[ou.status] || SC.offline}}></span>
                               </div>
                               <div className="dm-item-info">
-                                <div className="dm-item-name">{u.name}</div>
-                                <div className="dm-item-preview">{lastMsg ? lastMsg.content : "No messages yet"}</div>
+                                <div className="dm-item-name">{ou.name}{ou.is_verified && <span style={{marginLeft:4}}>⭐</span>}</div>
+                                <div className="dm-item-preview">{conv.last_message ? conv.last_message.content : "No messages yet"}</div>
                               </div>
-                              {lastMsg && <span className="dm-item-time">{lastMsg.time}</span>}
+                              {conv.last_message && <span className="dm-item-time">{new Date(conv.last_message.created_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</span>}
                             </div>
                           );
                         })
@@ -2591,49 +2590,61 @@ export default function OrbitThreadApp() {
                   </div>
                   {/* DM Chat Area */}
                   <div className="dm-main">
-                    {!activeDM || !acceptedUserIds.includes(activeDM) ? (
+                    {!activeConversationId ? (
                       <div className="dm-no-select">
                         <div className="dm-no-select-ico">💬</div>
                         <div className="dm-no-select-text">Select a conversation to start messaging</div>
                       </div>
                     ) : (() => {
-                      const dmUser = DEMO_USERS.find(u => u.id === activeDM);
-                      const msgs = dmMessages[activeDM] || [];
+                      const activeConv = dmConversations.find(c => c.id === activeConversationId);
+                      const dmUser = activeConv?.other_user || { name:"Unknown", initials:"??", avatar_color:"linear-gradient(135deg,#E8845A,#C4624A)", status:"offline" };
                       return (
                         <>
                           <div className="dm-header">
-                            <div className="av av-sm" style={{background:avatarGrad(dmUser.hue)}}>
-                              {dmUser.initials}
-                              <span className="pip pip-sm" style={{background:SC[dmUser.status]}}></span>
+                            <div className="av av-sm" style={{background:dmUser.avatar_color || "linear-gradient(135deg,#E8845A,#C4624A)"}}>
+                              {dmUser.initials || "??"}
+                              <span className="pip pip-sm" style={{background:SC[dmUser.status] || SC.offline}}></span>
                             </div>
                             <div>
-                              <div className="dm-header-name">{dmUser.name}</div>
-                              <div className="dm-header-status"><span style={{color:SC[dmUser.status]}}>●</span> {SL[dmUser.status]}</div>
+                              <div className="dm-header-name">{dmUser.name}{dmUser.is_verified && <span style={{marginLeft:4}}>⭐</span>}</div>
+                              <div className="dm-header-status"><span style={{color:SC[dmUser.status] || SC.offline}}>●</span> {SL[dmUser.status] || "Offline"}</div>
                             </div>
                           </div>
                           <div className="dm-msgs">
-                            {msgs.length === 0 && (
+                            {dmMsgsLoading && (
+                              <div className="empty" style={{padding:"40px 20px"}}>
+                                <div className="empty-sub">Loading messages...</div>
+                              </div>
+                            )}
+                            {!dmMsgsLoading && dmRealMessages.length === 0 && (
                               <div className="empty" style={{padding:"40px 20px"}}>
                                 <div className="empty-ico">💬</div>
                                 <div className="empty-title">Start talking</div>
                                 <div className="empty-sub">Say hello to {dmUser.name}!</div>
                               </div>
                             )}
-                            {msgs.map(m => (
-                              <div key={m.id} className={`dm-bubble ${m.from === "me" ? "mine" : "theirs"}`}>
+                            {dmRealMessages.map(m => (
+                              <div key={m.id} className={`dm-bubble ${m.sender_id === user?.id ? "mine" : "theirs"}`} style={{opacity: m._optimistic ? 0.7 : 1}}>
                                 <div>{m.content}</div>
-                                <div className="dm-bubble-time">{m.time}</div>
+                                <div className="dm-bubble-time">
+                                  {new Date(m.created_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}
+                                  {m.edited_at && " (edited)"}
+                                </div>
                               </div>
                             ))}
                             <div ref={msgsEnd} />
                           </div>
+                          {dmSendError && (
+                            <div style={{padding:"4px 16px",fontSize:11,color:"#F87171"}}>{dmSendError}</div>
+                          )}
                           <div className="dm-composer">
                             <div className="dm-cmp-inner">
                               <textarea className="cmp-ta" rows={1} placeholder={`Message ${dmUser.name}...`}
                                 value={dmMsg} onChange={e => setDmMsg(e.target.value)}
                                 onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendDM(); } }}
+                                disabled={dmSending}
                               />
-                              <button className="cmp-send" onClick={sendDM}>→</button>
+                              <button className="cmp-send" onClick={sendDM} disabled={dmSending}>{dmSending ? "..." : "→"}</button>
                             </div>
                           </div>
                         </>
