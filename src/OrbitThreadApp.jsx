@@ -1430,32 +1430,48 @@ export default function OrbitThreadApp() {
   // ── SUPABASE AUTH LISTENER ───────────────────────────────
   useEffect(() => {
     const loadProfile = async (authUser) => {
-      const { data: profile } = await supabase
-        .from("profiles").select("*").eq("id", authUser.id).single();
-      if (profile) {
-        setUser({
-          id: profile.id, name: profile.name, handle: profile.handle,
-          initials: profile.initials, status: S.ONLINE,
-          bio: profile.bio || "",
-        });
-        setIsVerified(profile.is_verified || false);
-        setSubPlan(profile.sub_plan || "monthly");
-        if (profile.topics?.length > 0) setSelectedTopics(profile.topics);
-        setProfileSettings({
-          profilePublic: profile.profile_public ?? true,
-          showStatus: profile.show_status ?? true,
-          allowConnect: profile.allow_connect ?? true,
-          emailNotifs: profile.email_notifs ?? true,
-        });
-        setView(profile.topics?.length >= 3 ? "home" : "onboard");
+      try {
+        const { data: profile } = await supabase
+          .from("profiles").select("*").eq("id", authUser.id).single();
+        if (profile) {
+          setUser({
+            id: profile.id, name: profile.name, handle: profile.handle,
+            initials: profile.initials, status: S.ONLINE,
+            bio: profile.bio || "",
+          });
+          setIsVerified(profile.is_verified || false);
+          setSubPlan(profile.sub_plan || "monthly");
+          if (profile.topics?.length > 0) setSelectedTopics(profile.topics);
+          setProfileSettings({
+            profilePublic: profile.profile_public ?? true,
+            showStatus: profile.show_status ?? true,
+            allowConnect: profile.allow_connect ?? true,
+            emailNotifs: profile.email_notifs ?? true,
+          });
+          setView(profile.topics?.length >= 3 ? "home" : "onboard");
+        }
+      } catch (err) {
+        console.error("Failed to load profile:", err);
       }
     };
 
-    // Check existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) loadProfile(session.user);
+    // Safety timeout — if Supabase never responds, stop loading after 5s
+    const safetyTimer = setTimeout(() => {
       setAuthLoading(false);
-    });
+    }, 5000);
+
+    // Check existing session
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        if (session?.user) loadProfile(session.user);
+        setAuthLoading(false);
+        clearTimeout(safetyTimer);
+      })
+      .catch((err) => {
+        console.error("Auth session check failed:", err);
+        setAuthLoading(false);
+        clearTimeout(safetyTimer);
+      });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -1468,7 +1484,10 @@ export default function OrbitThreadApp() {
         }
       }
     );
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(safetyTimer);
+    };
   }, []);
 
   // ── LOAD ROOMS FROM SUPABASE ─────────────────────────────

@@ -6,17 +6,17 @@
 
 ## Project At a Glance
 
-| Item | Value |
-|------|-------|
-| **App** | Orbit Thread — "Think Louder, Together." |
-| **What it is** | Real-time social platform (Circles, DMs, Connections, Discovery) |
-| **Live URL** | [orbit-thread.vercel.app](https://orbit-thread.vercel.app) |
-| **Repo** | [github.com/samisback2024/Orbit-Thread](https://github.com/samisback2024/Orbit-Thread) |
-| **Stack** | React 19.2 · Vite 7.3 · Supabase (PostgreSQL + Auth + Realtime) · Vercel |
-| **Total source lines** | ~4,700 (excluding config/lockfiles) |
-| **Bundle size** | 136 KB gzipped |
-| **Commits** | 22 on `main` |
-| **Date** | February 2026 |
+| Item                   | Value                                                                                  |
+| ---------------------- | -------------------------------------------------------------------------------------- |
+| **App**                | Orbit Thread — "Think Louder, Together."                                               |
+| **What it is**         | Real-time social platform (Circles, DMs, Connections, Discovery)                       |
+| **Live URL**           | [orbit-thread.vercel.app](https://orbit-thread.vercel.app)                             |
+| **Repo**               | [github.com/samisback2024/Orbit-Thread](https://github.com/samisback2024/Orbit-Thread) |
+| **Stack**              | React 19.2 · Vite 7.3 · Supabase (PostgreSQL + Auth + Realtime) · Vercel               |
+| **Total source lines** | ~4,700 (excluding config/lockfiles)                                                    |
+| **Bundle size**        | 136 KB gzipped                                                                         |
+| **Commits**            | 22 on `main`                                                                           |
+| **Date**               | February 2026                                                                          |
 
 ---
 
@@ -27,6 +27,7 @@
 Built the entire foundation from scratch in a single-file React architecture.
 
 **Authentication**
+
 - Email/password signup + login via Supabase Auth
 - Auto-profile creation on signup (Postgres trigger function)
 - Persistent sessions across page refreshes
@@ -34,10 +35,12 @@ Built the entire foundation from scratch in a single-file React architecture.
 - Full sign-out with state reset
 
 **Onboarding**
+
 - Topic picker (choose 3–5 from 55 curated topics)
 - Topics saved to user profile, skip onboarding on return visits
 
 **Circles (Rooms)**
+
 - Create rooms with name, purpose, visibility (public/private), member limit
 - Schedule rooms with date/time, export to ICS / Google Calendar
 - 5 rooms/day for free users, unlimited for Verified users
@@ -45,28 +48,33 @@ Built the entire foundation from scratch in a single-file React architecture.
 - All rooms persisted in Supabase `rooms` table
 
 **Real-Time Chat**
+
 - Live messaging in rooms via Supabase Realtime WebSocket
 - Emoji reactions, reply-to threading, auto-scroll
 - Client-side profanity filter
 - Messages persisted in `messages` table with author profiles
 
 **Connection System**
+
 - 3-state machine: NONE → PENDING_SENT → ACCEPTED
 - Send, accept, decline connection requests
 - In-app notification panel with action buttons
 - Chat/Call locked until connection accepted
 
 **Verified Badge**
+
 - Monthly ($4/mo) and Annual ($30/yr) plan toggle
 - Purchase persisted to `profiles` table
 - Checkmark displayed on profile and sidebar
 
 **Profile & Settings**
+
 - Profile page: name, handle, bio, interests, rooms
 - Privacy toggles: public profile, show status, allow connections, email notifs
 - All settings saved to Supabase
 
 **UI/UX**
+
 - Warm charcoal design with terracotta accents (`#E8845A`)
 - Plus Jakarta Sans + Lora typography
 - Aurora background glow, animated borders, shimmer effects
@@ -80,18 +88,21 @@ Built the entire foundation from scratch in a single-file React architecture.
 ### Phase 2 — Discovery, DMs, Premium
 
 **Geo-Radius Room Discovery**
+
 - Radius selector on room creation (1 mi → Worldwide, 7 tiers)
 - Haversine formula for distance calculation
 - Geo badge on room cards
 - "Near me" toggle on Discover tab using `navigator.geolocation`
 
 **Public Room Discovery**
+
 - Home tabs: "My Rooms" / "Discover"
 - Discover grid with public rooms across 11 topic categories
 - Join / Leave / Open actions per room
 - Member count + topic badges on cards
 
 **Direct Messaging (1:1 DMs) — Fully Persistent**
+
 - Complete Supabase-backed DM system (not mocks)
 - 3 database tables: `direct_conversations`, `direct_conversation_members`, `direct_messages`
 - Row Level Security: users can only see their own conversations and messages
@@ -103,12 +114,14 @@ Built the entire foundation from scratch in a single-file React architecture.
 - Conversation list sorted by most recent activity
 
 **Image Upload in Chat**
+
 - Paperclip button in message composer
 - FileReader API for base64 preview
 - 5 MB limit with error feedback
 - Supports JPEG, PNG, GIF, WebP
 
 **Premium Modal**
+
 - Feature list display (Unlimited Rooms, Verified Badge, Priority Support)
 - Plan pricing with trial activation
 - Verified status persisted to Supabase
@@ -119,45 +132,45 @@ Built the entire foundation from scratch in a single-file React architecture.
 
 ### SQL Migrations
 
-| File | Lines | What It Does |
-|------|-------|-------------|
-| `supabase/migrations/20260220000000_initial_schema.sql` | 158 | Core tables: `profiles`, `rooms`, `room_members`, `messages`, `connections`, `notifications`, `room_creations`. RLS policies, indexes, auto-profile trigger, realtime config. |
-| `supabase/migrations/20260220100000_direct_messages.sql` | 154 | DM tables: `direct_conversations`, `direct_conversation_members`, `direct_messages`. RLS policies, GIN indexes, `find_dm_conversation()` dedup function, `update_conversation_timestamp()` trigger, realtime config. |
+| File                                                     | Lines | What It Does                                                                                                                                                                                                         |
+| -------------------------------------------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `supabase/migrations/20260220000000_initial_schema.sql`  | 158   | Core tables: `profiles`, `rooms`, `room_members`, `messages`, `connections`, `notifications`, `room_creations`. RLS policies, indexes, auto-profile trigger, realtime config.                                        |
+| `supabase/migrations/20260220100000_direct_messages.sql` | 154   | DM tables: `direct_conversations`, `direct_conversation_members`, `direct_messages`. RLS policies, GIN indexes, `find_dm_conversation()` dedup function, `update_conversation_timestamp()` trigger, realtime config. |
 
 ### Backend Functions
 
-| File | Lines | What It Does |
-|------|-------|-------------|
-| `src/lib/dm.js` | 419 | All DM operations: `createConversation()`, `sendDirectMessage()`, `getUserConversations()`, `getConversationMessages()`, `subscribeToConversation()`, `subscribeToAllConversations()`, `editDirectMessage()`, `deleteDirectMessage()`. Graceful auth handling (returns `[]` when not logged in). |
+| File            | Lines | What It Does                                                                                                                                                                                                                                                                                     |
+| --------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/lib/dm.js` | 419   | All DM operations: `createConversation()`, `sendDirectMessage()`, `getUserConversations()`, `getConversationMessages()`, `subscribeToConversation()`, `subscribeToAllConversations()`, `editDirectMessage()`, `deleteDirectMessage()`. Graceful auth handling (returns `[]` when not logged in). |
 
 ### React Hooks
 
-| File | Lines | What It Does |
-|------|-------|-------------|
-| `src/hooks/useConversations.js` | 87 | Fetches conversation list, subscribes to realtime updates across all conversations. Accepts `userId` param — skips queries when not authenticated. |
-| `src/hooks/useDirectMessages.js` | 112 | Fetches messages for one conversation, realtime INSERT/UPDATE subscription, deduplication logic, optimistic message support. |
-| `src/hooks/useSendDirectMessage.js` | 106 | Send function with optimistic UI, profanity filter, error handling with rollback, loading state. |
+| File                                | Lines | What It Does                                                                                                                                       |
+| ----------------------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/hooks/useConversations.js`     | 87    | Fetches conversation list, subscribes to realtime updates across all conversations. Accepts `userId` param — skips queries when not authenticated. |
+| `src/hooks/useDirectMessages.js`    | 112   | Fetches messages for one conversation, realtime INSERT/UPDATE subscription, deduplication logic, optimistic message support.                       |
+| `src/hooks/useSendDirectMessage.js` | 106   | Send function with optimistic UI, profanity filter, error handling with rollback, loading state.                                                   |
 
 ### Core App
 
-| File | Lines | What It Does |
-|------|-------|-------------|
+| File                     | Lines | What It Does                                                                                                                                                                                 |
+| ------------------------ | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `src/OrbitThreadApp.jsx` | 2,760 | Entire app: CSS, constants, state, Supabase queries, all views (auth, onboard, home, room, profile, people, settings, create modal, invite modal, call modal, discover, DMs, premium modal). |
-| `src/supabase.js` | 8 | Supabase client initialization with env var fallbacks. |
-| `src/main.jsx` | 9 | React DOM root mount. |
-| `src/index.css` | 9 | Global body/html reset. |
+| `src/supabase.js`        | 8     | Supabase client initialization with env var fallbacks.                                                                                                                                       |
+| `src/main.jsx`           | 9     | React DOM root mount.                                                                                                                                                                        |
+| `src/index.css`          | 9     | Global body/html reset.                                                                                                                                                                      |
 
 ### Config & Deploy
 
-| File | Purpose |
-|------|---------|
-| `index.html` | Entry HTML with Orbit Thread favicon + title |
-| `vite.config.js` | Vite config with React plugin |
-| `vercel.json` | SPA rewrite rules for Vercel deployment |
-| `eslint.config.js` | ESLint config for React hooks + refresh |
-| `package.json` | 3 dependencies, 5 devDependencies |
-| `public/orbit-thread.svg` | Custom terracotta diamond favicon |
-| `supabase/config.toml` | Supabase CLI configuration |
+| File                      | Purpose                                      |
+| ------------------------- | -------------------------------------------- |
+| `index.html`              | Entry HTML with Orbit Thread favicon + title |
+| `vite.config.js`          | Vite config with React plugin                |
+| `vercel.json`             | SPA rewrite rules for Vercel deployment      |
+| `eslint.config.js`        | ESLint config for React hooks + refresh      |
+| `package.json`            | 3 dependencies, 5 devDependencies            |
+| `public/orbit-thread.svg` | Custom terracotta diamond favicon            |
+| `supabase/config.toml`    | Supabase CLI configuration                   |
 
 ---
 
@@ -194,6 +207,7 @@ Built the entire foundation from scratch in a single-file React architecture.
 3. **Broken references to removed variables** — `signOut()` called `setActiveDM(null)` and `setDmMessages({})`, and the sidebar JSX referenced `Object.values(dmMessages)` — all variables that were removed during the DM system integration. These would crash the app at runtime.
 
 **Fix (commit `71b29e1`):**
+
 - `dm.js`: `getUserConversations()` now returns `[]` when not authenticated instead of throwing
 - `useConversations.js`: Accepts `userId` parameter, skips all fetch/subscribe logic when `null`
 - `OrbitThreadApp.jsx`: Passes `user?.id` to `useConversations(user?.id)`
@@ -206,15 +220,15 @@ Built the entire foundation from scratch in a single-file React architecture.
 
 **Removed files (commit `4b721ca`):**
 
-| Deleted File | Why |
-|-------------|-----|
-| `src/App.css` | Vite boilerplate (logo spin animations, `.card` class) — never imported anywhere |
-| `src/App.jsx` | One-line re-export wrapper — `main.jsx` now imports `OrbitThreadApp` directly |
-| `src/assets/react.svg` | Vite boilerplate React logo — never referenced |
-| `public/vite.svg` | Default Vite favicon — replaced by `orbit-thread.svg` |
-| `src/components/DirectMessagesExample.jsx` | Reference demo component — not used in production |
-| `src/lib/dm-types.ts` | TypeScript type definitions — project is pure JSX, not compiled |
-| `supabase-schema.sql` (root) | Exact duplicate of `supabase/migrations/20260220000000_initial_schema.sql` |
+| Deleted File                               | Why                                                                              |
+| ------------------------------------------ | -------------------------------------------------------------------------------- |
+| `src/App.css`                              | Vite boilerplate (logo spin animations, `.card` class) — never imported anywhere |
+| `src/App.jsx`                              | One-line re-export wrapper — `main.jsx` now imports `OrbitThreadApp` directly    |
+| `src/assets/react.svg`                     | Vite boilerplate React logo — never referenced                                   |
+| `public/vite.svg`                          | Default Vite favicon — replaced by `orbit-thread.svg`                            |
+| `src/components/DirectMessagesExample.jsx` | Reference demo component — not used in production                                |
+| `src/lib/dm-types.ts`                      | TypeScript type definitions — project is pure JSX, not compiled                  |
+| `supabase-schema.sql` (root)               | Exact duplicate of `supabase/migrations/20260220000000_initial_schema.sql`       |
 
 **Removed devDependencies:**
 | Package | Why |
@@ -298,24 +312,27 @@ bdec4fe  Remove .env from tracking again
 ## Database Schema (10 Tables Total)
 
 ### Core Tables (Migration 1)
-| Table | Purpose |
-|-------|---------|
-| `profiles` | User data extending `auth.users` — name, handle, bio, topics, verified status, settings |
-| `rooms` | Circles — name, purpose, visibility, member limit, schedule, creator |
-| `room_members` | Many-to-many join: users ↔ rooms |
-| `messages` | Chat messages in rooms — content, author, reactions, reply_to, image |
-| `connections` | User-to-user connections — sender, receiver, status (pending/accepted/declined) |
-| `notifications` | In-app notifications — type, content, read status |
-| `room_creations` | Tracks daily room creation count per user (for free-tier 5/day limit) |
+
+| Table            | Purpose                                                                                 |
+| ---------------- | --------------------------------------------------------------------------------------- |
+| `profiles`       | User data extending `auth.users` — name, handle, bio, topics, verified status, settings |
+| `rooms`          | Circles — name, purpose, visibility, member limit, schedule, creator                    |
+| `room_members`   | Many-to-many join: users ↔ rooms                                                        |
+| `messages`       | Chat messages in rooms — content, author, reactions, reply_to, image                    |
+| `connections`    | User-to-user connections — sender, receiver, status (pending/accepted/declined)         |
+| `notifications`  | In-app notifications — type, content, read status                                       |
+| `room_creations` | Tracks daily room creation count per user (for free-tier 5/day limit)                   |
 
 ### DM Tables (Migration 2)
-| Table | Purpose |
-|-------|---------|
-| `direct_conversations` | Conversation container — `created_at`, `updated_at` |
-| `direct_conversation_members` | Exactly 2 members per conversation, unique constraint prevents duplicates |
-| `direct_messages` | Messages — `conversation_id`, `sender_id`, `content`, `edited_at`, `deleted` flag |
+
+| Table                         | Purpose                                                                           |
+| ----------------------------- | --------------------------------------------------------------------------------- |
+| `direct_conversations`        | Conversation container — `created_at`, `updated_at`                               |
+| `direct_conversation_members` | Exactly 2 members per conversation, unique constraint prevents duplicates         |
+| `direct_messages`             | Messages — `conversation_id`, `sender_id`, `content`, `edited_at`, `deleted` flag |
 
 ### Key Database Features
+
 - **Row Level Security** on all 10 tables — users can only access their own data
 - **Auto-profile trigger** — creates profile row when `auth.users` insert fires
 - **`find_dm_conversation()` function** — deduplicates conversations between same 2 users
@@ -327,18 +344,19 @@ bdec4fe  Remove .env from tracking again
 
 ## Tech Stack (Final)
 
-| Layer | Technology | Why |
-|-------|-----------|-----|
-| Frontend | React 19.2 + Vite 7.3 | Fast SPA with HMR |
-| Styling | CSS-in-JS (template literal) | Zero deps, single `const CSS` block |
-| Fonts | Plus Jakarta Sans + Lora | Warm, human typography |
-| Auth | Supabase Auth (email/password) | Session management, RLS integration |
-| Database | Supabase PostgreSQL | 10 tables, RLS, triggers, functions |
-| Realtime | Supabase Realtime (WebSocket) | Live messages in rooms + DMs |
-| Hosting | Vercel | Auto-deploy from `main`, CDN, SSL |
-| Source Control | Git + GitHub | 22 commits on main |
+| Layer          | Technology                     | Why                                 |
+| -------------- | ------------------------------ | ----------------------------------- |
+| Frontend       | React 19.2 + Vite 7.3          | Fast SPA with HMR                   |
+| Styling        | CSS-in-JS (template literal)   | Zero deps, single `const CSS` block |
+| Fonts          | Plus Jakarta Sans + Lora       | Warm, human typography              |
+| Auth           | Supabase Auth (email/password) | Session management, RLS integration |
+| Database       | Supabase PostgreSQL            | 10 tables, RLS, triggers, functions |
+| Realtime       | Supabase Realtime (WebSocket)  | Live messages in rooms + DMs        |
+| Hosting        | Vercel                         | Auto-deploy from `main`, CDN, SSL   |
+| Source Control | Git + GitHub                   | 22 commits on main                  |
 
 ### Dependencies (Production)
+
 ```
 @supabase/supabase-js  ^2.97.0
 react                  ^19.2.0
@@ -346,6 +364,7 @@ react-dom              ^19.2.0
 ```
 
 ### Dev Dependencies
+
 ```
 @eslint/js                    ^9.39.1
 @vitejs/plugin-react          ^5.1.1
@@ -370,4 +389,4 @@ See [README.md](README.md) for the full roadmap — Phases 3 through 7 covering:
 
 ---
 
-*Built by Sam — February 2026.*
+_Built by Sam — February 2026._
