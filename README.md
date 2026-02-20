@@ -13,14 +13,15 @@ Users create "Circles" (rooms), have real-time conversations, connect with other
 4. [Project Structure](#project-structure)
 5. [Design System](#design-system)
 6. [Features (Phase 1 — Complete)](#features-phase-1--complete)
-7. [Database Schema](#database-schema)
-8. [Authentication Flow](#authentication-flow)
-9. [Real-Time Messaging](#real-time-messaging)
-10. [Environment Variables](#environment-variables)
-11. [Local Development](#local-development)
-12. [Deployment](#deployment)
-13. [Phase 2 Roadmap](#phase-2-roadmap)
-14. [Known Limitations](#known-limitations)
+7. [Features (Phase 2 — Complete)](#features-phase-2--complete)
+8. [Database Schema](#database-schema)
+9. [Authentication Flow](#authentication-flow)
+10. [Real-Time Messaging](#real-time-messaging)
+11. [Environment Variables](#environment-variables)
+12. [Local Development](#local-development)
+13. [Deployment](#deployment)
+14. [Phase 3 Roadmap](#phase-3-roadmap)
+15. [Known Limitations](#known-limitations)
 
 ---
 
@@ -65,7 +66,7 @@ Users create "Circles" (rooms), have real-time conversations, connect with other
 
 **Key design decisions:**
 
-- **Single-file component:** The entire app lives in `VoxenApp.jsx` (~2260 lines). This is intentional for Phase 1 — keeps everything visible and self-contained. Phase 2 should split into modules.
+- **Single-file component:** The entire app lives in `VoxenApp.jsx` (~2950 lines). This is intentional for rapid iteration — keeps everything visible and self-contained. Future phases should split into modules.
 - **CSS-in-JS via template literal:** All styles are in a `const CSS` string injected via `<style>{CSS}</style>`. No build tool config needed. Phase 2 could migrate to CSS Modules or Tailwind.
 - **No external UI library:** Every component (modals, cards, buttons, avatars) is hand-built. Keeps bundle small (~130KB gzipped).
 - **Supabase client-side only:** No backend server. Supabase RLS (Row Level Security) policies protect data. The anon key is safe to expose — RLS enforces access.
@@ -100,7 +101,7 @@ voxen/
 
 | File                  | Lines | What It Does                                                                                                                                                             |
 | --------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `VoxenApp.jsx`        | ~2260 | Everything: CSS, constants, mock data, state, Supabase queries, all views (auth, onboard, home, room, profile, people, settings, create modal, invite modal, call modal) |
+| `VoxenApp.jsx`        | ~2950 | Everything: CSS, constants, mock data, state, Supabase queries, all views (auth, onboard, home, room, profile, people, settings, create modal, invite modal, call modal, discover, DMs, premium modal) |
 | `supabase.js`         | ~10   | Creates and exports the Supabase client using env vars                                                                                                                   |
 | `supabase-schema.sql` | ~178  | Full database schema — tables, indexes, RLS policies, trigger for auto-profile creation, realtime config                                                                 |
 | `vercel.json`         | ~5    | SPA catch-all rewrite so routes don't 404 on Vercel                                                                                                                      |
@@ -205,6 +206,55 @@ voxen/
 - [x] Search across rooms and people
 - [x] Notification panel with unread count
 - [x] Responsive layout (mobile-friendly with sidebar collapse)
+
+---
+
+## Features (Phase 2 — Complete)
+
+### Geo-Radius Room Discovery
+
+- [x] Radius selector when creating a room (1 mi → Worldwide, 7 options)
+- [x] Haversine formula calculates distance between users and rooms
+- [x] Geo badge on room cards shows radius setting
+- [x] "Near me" toggle on Discover tab filters rooms by GPS proximity
+- [x] `navigator.geolocation` API for user location with permission prompt
+- [x] Geo-notification toast when creating a geo-fenced room
+
+### Public Room Discovery + Join/Leave
+
+- [x] Home screen tabs: "My Rooms" / "Discover"
+- [x] Discover grid with 8 seed public rooms across categories
+- [x] Topic filter chips (11 categories: Gaming, Music, Tech, etc.)
+- [x] Join / Leave / Open buttons per discover card
+- [x] Joined rooms appear in "My Rooms" tab
+- [x] Member count + topic badges on discover cards
+
+### Direct Messaging (1:1 DMs)
+
+- [x] DM view accessible from sidebar navigation
+- [x] Contact sidebar listing all connected users
+- [x] Bubble-style chat layout (sent vs received)
+- [x] Simulated auto-replies (1.5s delay, 4 reply templates)
+- [x] Empty state with prompt to start a conversation
+- [x] Timestamps on DM messages
+
+### Stripe Premium / Verified Badge Modal
+
+- [x] ⭐ icon in sidebar opens Premium modal
+- [x] Feature list (Unlimited Rooms, Verified Badge, Priority Support, Early Access, Custom Themes)
+- [x] $4.99/month pricing display
+- [x] "Start Free Trial" button activates verified status
+- [x] Verified badge persisted to Supabase `profiles` table
+- [x] Verified checkmark visible in sidebar and profile page
+
+### Image Upload in Room Chat
+
+- [x] 📎 paperclip button in message composer
+- [x] FileReader API converts images to base64
+- [x] Image preview with ✕ dismiss before sending
+- [x] 5 MB file size limit with error feedback
+- [x] Images render inline in chat messages (`msg-img` class)
+- [x] Supports JPEG, PNG, GIF, WebP formats
 
 ---
 
@@ -351,16 +401,18 @@ npm run dev
 
 ---
 
-## Phase 2 Roadmap
+## Phase 3 Roadmap
 
-### Priority 1 — Core Functionality
+### Priority 1 — Wire to Supabase
 
-| Feature               | Description                                                                                                                            | Complexity |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| **Real connections**  | Replace `DEMO_USERS` mock with real user discovery from `profiles` table. Wire connection requests to `connections` table in Supabase. | Medium     |
-| **Direct messaging**  | 1:1 chat between connected users. New `direct_messages` table.                                                                         | Medium     |
-| **Join public rooms** | Currently only creators see rooms. Add "Browse & Join" for all public rooms.                                                           | Easy       |
-| **Room member list**  | Show who's in a room, pull from `room_members` table.                                                                                  | Easy       |
+| Feature                     | Description                                                                                                                            | Complexity |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| **Real connections**        | Replace `DEMO_USERS` mock with real user discovery from `profiles` table. Wire connection requests to `connections` table in Supabase. | Medium     |
+| **Persist DMs**             | Create `direct_messages` table in Supabase, wire realtime subscription, replace simulated replies with real delivery.                  | Medium     |
+| **Persist geo rooms**       | Add `radius`, `lat`, `lng` columns to `rooms` table. Query rooms by proximity server-side.                                            | Medium     |
+| **Supabase Storage images** | Move image uploads from base64 inline to `chat-files` Supabase Storage bucket. Store URL in `messages.image_url`.                     | Medium     |
+| **Real Stripe checkout**    | Replace simulated premium flow with Stripe Checkout → webhook → update `profiles.verified`.                                           | Medium     |
+| **Room member list**        | Show who's in a room, pull from `room_members` table.                                                                                 | Easy       |
 
 ### Priority 2 — User Experience
 
@@ -376,11 +428,9 @@ npm run dev
 
 | Feature                | Description                                           | Complexity |
 | ---------------------- | ----------------------------------------------------- | ---------- |
-| **File uploads**       | Images/files in chat via Supabase Storage.            | Medium     |
 | **Push notifications** | Browser push API + service worker for offline alerts. | Hard       |
 | **Voice/video calls**  | WebRTC peer-to-peer calling. Needs signaling server.  | Hard       |
 | **Admin dashboard**    | Manage users, rooms, reports. Separate admin role.    | Medium     |
-| **Stripe payments**    | Real subscription billing for Verified badge.         | Medium     |
 | **Custom domains**     | Point `voxen.app` or similar to Vercel.               | Easy       |
 
 ### Priority 4 — Code Quality
@@ -398,18 +448,21 @@ npm run dev
 
 ## Known Limitations
 
-1. **Single-file architecture** — `VoxenApp.jsx` is ~2260 lines. Works for Phase 1 but should be split for maintainability.
+1. **Single-file architecture** — `VoxenApp.jsx` is ~2950 lines. Works for rapid iteration but should be split for maintainability.
 2. **Mock users** — The "People" page shows hardcoded `DEMO_USERS`, not real users from the database.
 3. **Connection system** — Uses local React state (`connStates`), not persisted to Supabase `connections` table yet.
 4. **No email verification** — Turned off for easier dev. Should be enabled for production.
 5. **No rate limiting on client** — Supabase RLS protects data, but no client-side throttling on rapid clicks.
-6. **Profanity filter** — Client-side only (can be bypassed). Phase 2 should add server-side filtering via Supabase Edge Functions.
-7. **No image/file support** — Chat is text-only.
-8. **Call button** — Shows a UI mockup, no real WebRTC implementation.
+6. **Profanity filter** — Client-side only (can be bypassed). Should add server-side filtering via Supabase Edge Functions.
+7. **DMs are simulated** — Auto-replies are client-side placeholders. Needs `direct_messages` table + realtime.
+8. **Images stored as base64** — Works but bloats message payload. Should migrate to Supabase Storage bucket.
+9. **Premium/Stripe is simulated** — No real payment flow. Needs Stripe Checkout + webhook integration.
+10. **Geo rooms not persisted** — Room radius/lat/lng not saved to Supabase yet. Seed rooms are hardcoded.
+11. **Call button** — Shows a UI mockup, no real WebRTC implementation.
 
 ---
 
 ## Credits
 
-Built by **Sam** — Phase 1 completed February 2026.  
+Built by **Sam** — Phase 1 & 2 completed February 2026.  
 Design philosophy: "Human-crafted warmth — feels like a premium notebook, not a cold SaaS dashboard."
