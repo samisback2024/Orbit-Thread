@@ -1431,27 +1431,75 @@ export default function OrbitThreadApp() {
   useEffect(() => {
     const loadProfile = async (authUser) => {
       try {
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from("profiles").select("*").eq("id", authUser.id).single();
-        if (profile) {
+
+        if (profileError || !profile) {
+          // Profile doesn't exist yet (trigger may not have fired).
+          // Create one from the auth user metadata so the app can proceed.
+          const meta = authUser.user_metadata || {};
+          const fallbackName = meta.name || authUser.email?.split("@")[0] || "User";
+          const fallbackHandle = "@" + fallbackName.toLowerCase().replace(/\s+/g, "");
+          const fallbackInitials = fallbackName.split(/\s+/).map(w => w[0]).join("").toUpperCase().slice(0, 2);
+
+          const { data: newProfile } = await supabase
+            .from("profiles")
+            .upsert({
+              id: authUser.id,
+              name: fallbackName,
+              handle: fallbackHandle,
+              initials: fallbackInitials,
+            }, { onConflict: "id" })
+            .select()
+            .single();
+
+          if (newProfile) {
+            setUser({
+              id: newProfile.id, name: newProfile.name, handle: newProfile.handle,
+              initials: newProfile.initials, status: S.ONLINE,
+              bio: newProfile.bio || "",
+            });
+            setView("onboard");
+            return;
+          }
+
+          // If even upsert fails, create a minimal local user so app doesn't hang
           setUser({
-            id: profile.id, name: profile.name, handle: profile.handle,
-            initials: profile.initials, status: S.ONLINE,
-            bio: profile.bio || "",
+            id: authUser.id, name: fallbackName, handle: fallbackHandle,
+            initials: fallbackInitials, status: S.ONLINE, bio: "",
           });
-          setIsVerified(profile.is_verified || false);
-          setSubPlan(profile.sub_plan || "monthly");
-          if (profile.topics?.length > 0) setSelectedTopics(profile.topics);
-          setProfileSettings({
-            profilePublic: profile.profile_public ?? true,
-            showStatus: profile.show_status ?? true,
-            allowConnect: profile.allow_connect ?? true,
-            emailNotifs: profile.email_notifs ?? true,
-          });
-          setView(profile.topics?.length >= 3 ? "home" : "onboard");
+          setView("onboard");
+          return;
         }
+
+        setUser({
+          id: profile.id, name: profile.name, handle: profile.handle,
+          initials: profile.initials, status: S.ONLINE,
+          bio: profile.bio || "",
+        });
+        setIsVerified(profile.is_verified || false);
+        setSubPlan(profile.sub_plan || "monthly");
+        if (profile.topics?.length > 0) setSelectedTopics(profile.topics);
+        setProfileSettings({
+          profilePublic: profile.profile_public ?? true,
+          showStatus: profile.show_status ?? true,
+          allowConnect: profile.allow_connect ?? true,
+          emailNotifs: profile.email_notifs ?? true,
+        });
+        setView(profile.topics?.length >= 3 ? "home" : "onboard");
       } catch (err) {
         console.error("Failed to load profile:", err);
+        // Even on total failure, create a minimal user so the app doesn't hang
+        const meta = authUser.user_metadata || {};
+        const fallbackName = meta.name || authUser.email?.split("@")[0] || "User";
+        setUser({
+          id: authUser.id,
+          name: fallbackName,
+          handle: "@" + fallbackName.toLowerCase().replace(/\s+/g, ""),
+          initials: fallbackName.split(/\s+/).map(w => w[0]).join("").toUpperCase().slice(0, 2),
+          status: S.ONLINE, bio: "",
+        });
+        setView("onboard");
       }
     };
 
