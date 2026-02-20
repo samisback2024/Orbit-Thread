@@ -15,9 +15,8 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { getUserConversations, subscribeToAllConversations } from "../lib/dm";
-import { supabase } from "../supabase";
 
-export function useConversations() {
+export function useConversations(userId) {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -36,19 +35,21 @@ export function useConversations() {
   }, []);
 
   useEffect(() => {
+    // Skip if no authenticated user yet
+    if (!userId) {
+      setConversations([]);
+      setLoading(false);
+      return;
+    }
+
     let mounted = true;
 
     const init = async () => {
       await fetchConversations();
-
-      // Get current user for subscription
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user || !mounted) return;
+      if (!mounted) return;
 
       // Subscribe to all new messages across conversations
-      unsubRef.current = subscribeToAllConversations(user.id, ({ message }) => {
+      unsubRef.current = subscribeToAllConversations(userId, ({ message }) => {
         if (!mounted) return;
 
         // Update the conversation list: bump last_message and reorder
@@ -87,7 +88,7 @@ export function useConversations() {
         unsubRef.current = null;
       }
     };
-  }, [fetchConversations]);
+  }, [userId, fetchConversations]);
 
   return {
     conversations,

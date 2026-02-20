@@ -1355,7 +1355,7 @@ export default function OrbitThreadApp() {
   // ── PHASE 2: DMs (now fully persistent via Supabase) ────
   const [activeConversationId, setActiveConversationId] = useState(null);
   const [dmMsg, setDmMsg]             = useState("");
-  const { conversations: dmConversations, loading: dmConvLoading, refresh: refreshConversations } = useConversations();
+  const { conversations: dmConversations, loading: dmConvLoading, refresh: refreshConversations } = useConversations(user?.id);
   const { messages: dmRealMessages, loading: dmMsgsLoading, addOptimisticMessage } = useDirectMessages(activeConversationId);
   const { send: sendDMMessage, sending: dmSending, error: dmSendError } = useSendDirectMessage();
 
@@ -1891,7 +1891,7 @@ export default function OrbitThreadApp() {
     setAllMessages({}); setPinned({}); setEmail(""); setAuthPassword("");
     setAuthName(""); setAuthMode("login"); setAuthError("");
     setConnStates({ u1: CS.NONE, u2: CS.NONE, u3: CS.NONE, u4: CS.NONE });
-    setActiveDM(null); setDmMessages({}); setDmMsg("");
+    setActiveConversationId(null); setDmMsg("");
     setJoinedRooms([]); setPublicRooms(SEED_ROOMS);
     setHomeTab("my-rooms"); setDiscoverFilter("all");
     setAttachedImg(null); setShowPremium(false);
@@ -2046,7 +2046,7 @@ export default function OrbitThreadApp() {
               <div className={`sb-item${view==="messages"?" active":""}`} onClick={() => setView("messages")} style={{gap:7}}>
                 <span style={{fontSize:14}}>💬</span>
                 <span className="sb-iname">Direct Messages</span>
-                {Object.values(dmMessages).some(arr => arr.length > 0) && <span style={{width:6,height:6,borderRadius:"50%",background:"var(--clay)",flexShrink:0}} />}
+                {dmConversations.length > 0 && <span style={{width:6,height:6,borderRadius:"50%",background:"var(--clay)",flexShrink:0}} />}
               </div>
 
               <div className="sb-footer">

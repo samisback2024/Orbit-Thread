@@ -153,7 +153,8 @@ export async function getUserConversations() {
     error: authError,
   } = await supabase.auth.getUser();
   if (authError || !user) {
-    throw new Error("Not authenticated");
+    // Not authenticated — return empty list instead of crashing
+    return [];
   }
 
   // Get all conversation IDs the user belongs to
