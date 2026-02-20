@@ -75,6 +75,49 @@ const avatarGrad = (hue) => {
   return `linear-gradient(135deg, hsl(${h1},${s}%,${l+10}%), hsl(${h1+40},${s+10}%,${l-5}%))`;
 };
 
+// ── Haversine formula — distance in miles between two GPS points ──
+const haversineMiles = (lat1, lon1, lat2, lon2) => {
+  const R = 3958.8;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+};
+
+// ── Geo-radius options for public rooms ──────────────────────
+const RADIUS_OPTIONS = [
+  { label:"1 mile",     value:1 },
+  { label:"5 miles",    value:5 },
+  { label:"25 miles",   value:25 },
+  { label:"100 miles",  value:100 },
+  { label:"My City",    value:50 },
+  { label:"My Country", value:3000 },
+  { label:"Worldwide",  value:99999 },
+];
+
+// ── Seed public rooms for Discover tab ───────────────────────
+const SEED_ROOMS = [
+  { id:"sr1", name:"AI Ethics Roundtable",   desc:"Debating the moral boundaries of artificial intelligence.",       type:"public", creatorName:"Alex Chen",    memberCount:24, topic:"AI Research",       radius:99999, lat:37.77,  lng:-122.42 },
+  { id:"sr2", name:"Climate Action Now",      desc:"Practical steps for climate tech adoption.",                      type:"public", creatorName:"Maya Patel",   memberCount:31, topic:"Climate Tech",      radius:100,   lat:40.71,  lng:-74.01  },
+  { id:"sr3", name:"Philosophy of Mind",      desc:"Consciousness, qualia, and the hard problem.",                    type:"public", creatorName:"Jordan Lee",   memberCount:18, topic:"Philosophy",        radius:99999, lat:51.51,  lng:-0.13   },
+  { id:"sr4", name:"DeFi Deep Dive",          desc:"Exploring decentralized finance protocols.",                      type:"public", creatorName:"Sam Kim",      memberCount:42, topic:"Fintech",           radius:25,    lat:34.05,  lng:-118.24 },
+  { id:"sr5", name:"Quantum Computing 101",   desc:"From qubits to quantum supremacy, beginner-friendly.",           type:"public", creatorName:"Priya Sharma", memberCount:15, topic:"Quantum Computing", radius:99999, lat:48.86,  lng:2.35    },
+  { id:"sr6", name:"Urban Futures",           desc:"How cities can be redesigned for people.",                        type:"public", creatorName:"Liam O'Brien", memberCount:27, topic:"Urban Planning",    radius:50,    lat:41.88,  lng:-87.63  },
+  { id:"sr7", name:"Biotech Breakthroughs",   desc:"CRISPR, gene therapy, and the future of medicine.",              type:"public", creatorName:"Ayumi Tanaka", memberCount:33, topic:"Biotech",           radius:99999, lat:35.68,  lng:139.69  },
+  { id:"sr8", name:"Space Economy",           desc:"Commercial space ventures and the next frontier.",                type:"public", creatorName:"Carlos Mendez",memberCount:21, topic:"Space Exploration", radius:99999, lat:28.57,  lng:-80.65  },
+];
+
+// ── DM simulated replies ─────────────────────────────────────
+const DM_REPLIES = [
+  "That's a great point.",
+  "Interesting — tell me more.",
+  "Agreed.",
+  "Let's take this to a room!",
+];
+
+// ── Discover topic filters ───────────────────────────────────
+const DISCOVER_TOPICS = ["All","AI Research","Climate Tech","Philosophy","Fintech","Quantum Computing","Urban Planning","Biotech","Space Exploration","Geopolitics","Neuroscience"];
+
 // ════════════════════════════════════════════════════════════
 // DESIGN SYSTEM — Warm Human Aesthetic
 // Key decisions:
@@ -1009,6 +1052,245 @@ const CSS = `
     .home-wrap { padding:16px; }
     .rooms-grid { grid-template-columns:1fr; }
     .profile-page { padding:16px; }
+    .discover-grid { grid-template-columns:1fr; }
+    .dm-layout { flex-direction:column; }
+    .dm-sidebar { width:100%; min-width:unset; max-height:200px; border-right:none; border-bottom:1px solid var(--b1); }
+  }
+
+  /* ════════════════════════════════
+     PHASE 2 — HOME TABS (My Rooms / Discover)
+  ════════════════════════════════ */
+  .home-tabs { display:flex; gap:4px; margin-bottom:18px; background:var(--surf); border-radius:var(--r12); padding:4px; border:1px solid var(--b1); }
+  .home-tab {
+    flex:1; padding:10px 16px; border:none; border-radius:var(--r10);
+    font-family:var(--bf); font-size:13px; font-weight:600; cursor:pointer;
+    color:var(--t2); background:transparent; transition:all 0.18s;
+    display:flex; align-items:center; justify-content:center; gap:7px;
+  }
+  .home-tab:hover { color:var(--t0); }
+  .home-tab.active {
+    background:rgba(232,132,90,0.12); color:var(--t0);
+    box-shadow:0 2px 8px rgba(232,132,90,0.1);
+  }
+
+  /* ════════════════════════════════
+     PHASE 2 — GEO BADGE + RADIUS SELECTOR
+  ════════════════════════════════ */
+  .geo-badge {
+    display:inline-flex; align-items:center; gap:4px;
+    padding:3px 9px; background:rgba(107,158,255,0.08);
+    border:1px solid rgba(107,158,255,0.2);
+    border-radius:var(--r99); font-size:10px; font-weight:600; color:var(--sky);
+  }
+  .radius-grid {
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(110px,1fr));
+    gap:7px; margin-top:8px;
+  }
+  .radius-opt {
+    padding:10px 8px; background:var(--surf); border:2px solid var(--b1);
+    border-radius:var(--r10); cursor:pointer; text-align:center;
+    transition:all 0.15s; font-size:12px; font-weight:600; color:var(--t1);
+  }
+  .radius-opt:hover { border-color:var(--b3); color:var(--t0); }
+  .radius-opt.sel { border-color:var(--sky); background:rgba(107,158,255,0.07); color:var(--t0); }
+
+  /* ════════════════════════════════
+     PHASE 2 — DISCOVER TAB
+  ════════════════════════════════ */
+  .discover-filters {
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid var(--b0);
+  }
+  .filter-chip {
+    padding:6px 14px; background:var(--surf); border:1px solid var(--b1);
+    border-radius:var(--r99); font-size:12px; font-weight:500; cursor:pointer;
+    color:var(--t2); transition:all 0.13s; white-space:nowrap;
+  }
+  .filter-chip:hover { border-color:var(--b3); color:var(--t0); }
+  .filter-chip.sel { background:rgba(232,132,90,0.1); border-color:var(--clay); color:var(--t0); }
+  .nearme-toggle {
+    display:flex; align-items:center; gap:6px; padding:6px 14px;
+    background:var(--surf); border:1px solid var(--b1);
+    border-radius:var(--r99); font-size:12px; font-weight:600; cursor:pointer;
+    color:var(--t2); transition:all 0.13s; margin-left:auto; white-space:nowrap;
+  }
+  .nearme-toggle:hover { border-color:var(--sky); color:var(--sky); }
+  .nearme-toggle.on { background:rgba(107,158,255,0.1); border-color:var(--sky); color:var(--sky); }
+  .discover-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:13px; }
+  .discover-card {
+    background:var(--surf); border:1px solid var(--b1);
+    border-radius:var(--r16); padding:20px; transition:all 0.22s;
+    position:relative; overflow:hidden;
+  }
+  .discover-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:2px;
+    background:linear-gradient(90deg, var(--sky), var(--sage));
+    opacity:0; transition:opacity 0.3s;
+  }
+  .discover-card:hover::before { opacity:1; }
+  .discover-card:hover { border-color:var(--b2); transform:translateY(-2px); box-shadow:0 8px 24px rgba(107,158,255,0.1); }
+  .dc-header { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:8px; }
+  .dc-name { font-family:var(--hf); font-size:15px; font-weight:600; flex:1; }
+  .dc-creator { font-size:11px; color:var(--t2); margin-bottom:6px; }
+  .dc-desc { font-size:12px; color:var(--t1); line-height:1.6; margin-bottom:14px; }
+  .dc-foot { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+  .dc-meta { display:flex; align-items:center; gap:10px; }
+  .dc-members { font-size:11px; color:var(--t2); display:flex; align-items:center; gap:4px; }
+  .btn-join {
+    padding:7px 16px; border:none; border-radius:var(--r8);
+    background:linear-gradient(135deg, var(--sky), #5A8AE6);
+    color:#fff; font-family:var(--bf); font-size:12px; font-weight:700;
+    cursor:pointer; transition:all 0.18s; box-shadow:0 3px 10px rgba(107,158,255,0.25);
+  }
+  .btn-join:hover { transform:translateY(-1px); box-shadow:0 6px 18px rgba(107,158,255,0.4); }
+  .btn-leave {
+    padding:7px 14px; border:1px solid rgba(232,90,107,0.25); border-radius:var(--r8);
+    background:transparent; color:var(--rose); font-family:var(--bf);
+    font-size:12px; font-weight:600; cursor:pointer; transition:all 0.14s;
+  }
+  .btn-leave:hover { background:rgba(232,90,107,0.07); }
+  .btn-open {
+    padding:7px 14px; border:1px solid var(--b2); border-radius:var(--r8);
+    background:var(--raised); color:var(--t0); font-family:var(--bf);
+    font-size:12px; font-weight:600; cursor:pointer; transition:all 0.14s;
+  }
+  .btn-open:hover { background:var(--overlay); }
+
+  /* ════════════════════════════════
+     PHASE 2 — DIRECT MESSAGES
+  ════════════════════════════════ */
+  .dm-layout { display:flex; flex:1; overflow:hidden; }
+  .dm-sidebar {
+    width:280px; min-width:280px; border-right:1px solid var(--b1);
+    background:var(--base); display:flex; flex-direction:column; overflow:hidden;
+  }
+  .dm-sb-head {
+    padding:16px; border-bottom:1px solid var(--b0);
+    font-family:var(--hf); font-size:16px; font-weight:600;
+  }
+  .dm-list { flex:1; overflow-y:auto; }
+  .dm-item {
+    display:flex; align-items:center; gap:10px; padding:12px 16px;
+    cursor:pointer; transition:background 0.12s; border-bottom:1px solid var(--b0);
+  }
+  .dm-item:hover { background:var(--surf); }
+  .dm-item.active { background:rgba(232,132,90,0.08); }
+  .dm-item-info { flex:1; min-width:0; }
+  .dm-item-name { font-size:13px; font-weight:600; }
+  .dm-item-preview { font-size:11px; color:var(--t2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:2px; }
+  .dm-item-time { font-size:10px; color:var(--t2); flex-shrink:0; }
+  .dm-empty-sb { padding:24px 16px; text-align:center; }
+  .dm-empty-sb-ico { font-size:28px; opacity:0.4; margin-bottom:8px; }
+  .dm-empty-sb-text { font-size:12px; color:var(--t2); line-height:1.7; font-style:italic; }
+
+  .dm-main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+  .dm-header {
+    padding:14px 18px; border-bottom:1px solid var(--b0);
+    display:flex; align-items:center; gap:11px; flex-shrink:0;
+  }
+  .dm-header-name { font-family:var(--hf); font-size:15px; font-weight:600; }
+  .dm-header-status { font-size:11px; color:var(--t2); display:flex; align-items:center; gap:4px; margin-top:2px; }
+  .dm-msgs { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:8px; }
+  .dm-bubble {
+    max-width:70%; padding:10px 14px; border-radius:var(--r14);
+    font-size:13px; line-height:1.6; animation:fadeUp 0.15s ease;
+  }
+  .dm-bubble.mine {
+    align-self:flex-end; background:var(--clay); color:#fff;
+    border-bottom-right-radius:4px;
+  }
+  .dm-bubble.theirs {
+    align-self:flex-start; background:var(--surf); border:1px solid var(--b1);
+    color:var(--t0); border-bottom-left-radius:4px;
+  }
+  .dm-bubble-time { font-size:10px; opacity:0.7; margin-top:4px; }
+  .dm-no-select {
+    flex:1; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; gap:10px; color:var(--t2);
+  }
+  .dm-no-select-ico { font-size:36px; opacity:0.3; }
+  .dm-no-select-text { font-size:14px; font-style:italic; }
+  .dm-composer { padding:10px 16px 14px; border-top:1px solid var(--b0); flex-shrink:0; }
+  .dm-cmp-inner {
+    display:flex; gap:9px; align-items:flex-end;
+    background:var(--surf); border:1px solid var(--b1);
+    border-radius:var(--r14); padding:9px 11px;
+    transition:all 0.25s;
+  }
+  .dm-cmp-inner:focus-within { border-color:var(--clay); box-shadow:0 0 0 3px var(--clay-glow); }
+
+  /* ════════════════════════════════
+     PHASE 2 — PREMIUM MODAL
+  ════════════════════════════════ */
+  .premium-modal { max-width:440px; text-align:center; }
+  .pm-star { font-size:48px; margin-bottom:12px; }
+  .pm-title { font-family:var(--hf); font-size:24px; font-weight:700; margin-bottom:4px; }
+  .pm-price { font-size:18px; font-weight:700; color:var(--clay); margin-bottom:18px; }
+  .pm-price span { font-size:13px; font-weight:400; color:var(--t2); }
+  .pm-features { text-align:left; margin-bottom:24px; display:flex; flex-direction:column; gap:10px; }
+  .pm-feat {
+    display:flex; align-items:center; gap:10px; font-size:13px; color:var(--t1);
+    padding:8px 12px; background:var(--surf); border-radius:var(--r10);
+    border:1px solid var(--b0);
+  }
+  .pm-feat-ico { font-size:16px; flex-shrink:0; }
+  .pm-actions { display:flex; gap:10px; }
+  .pm-start {
+    flex:1; padding:14px 20px; border:none; border-radius:var(--r12);
+    background:linear-gradient(135deg, var(--clay), var(--gold));
+    color:#fff; font-family:var(--bf); font-size:15px; font-weight:700;
+    cursor:pointer; transition:all 0.22s; box-shadow:0 4px 16px rgba(232,132,90,0.3);
+    position:relative; overflow:hidden;
+  }
+  .pm-start::before {
+    content:''; position:absolute; top:0; left:-100%; width:100%; height:100%;
+    background:linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition:left 0.5s;
+  }
+  .pm-start:hover::before { left:100%; }
+  .pm-start:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(232,132,90,0.45); }
+  .pm-cancel {
+    padding:14px 20px; border:1px solid var(--b2); border-radius:var(--r12);
+    background:transparent; color:var(--t1); font-family:var(--bf);
+    font-size:14px; font-weight:600; cursor:pointer; transition:all 0.14s;
+  }
+  .pm-cancel:hover { background:var(--surf); }
+
+  /* ════════════════════════════════
+     PHASE 2 — IMAGE UPLOAD
+  ════════════════════════════════ */
+  .cmp-attach {
+    width:32px; height:32px; border-radius:var(--r8);
+    background:var(--raised); border:1px solid var(--b1);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; color:var(--t2); font-size:14px; flex-shrink:0;
+    transition:all 0.14s;
+  }
+  .cmp-attach:hover { color:var(--clay); border-color:rgba(232,132,90,0.3); background:rgba(232,132,90,0.06); }
+  .img-preview {
+    display:flex; align-items:center; gap:10px; padding:8px 12px;
+    margin:0 16px 4px; background:var(--surf); border:1px solid var(--b1);
+    border-radius:var(--r10); animation:fadeUp 0.15s ease;
+  }
+  .img-preview img { height:60px; border-radius:8px; object-fit:cover; }
+  .img-preview-remove {
+    margin-left:auto; background:none; border:none; color:var(--t2);
+    cursor:pointer; font-size:16px; padding:4px 8px; border-radius:6px;
+    transition:color 0.13s;
+  }
+  .img-preview-remove:hover { color:var(--rose); }
+  .msg-img { max-width:260px; border-radius:10px; margin-top:8px; display:block; }
+
+  /* ════════════════════════════════
+     PHASE 2 — SUCCESS TOAST
+  ════════════════════════════════ */
+  .success-toast {
+    position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+    background:rgba(18,15,12,0.95); border:1px solid rgba(92,184,130,0.35);
+    color:var(--sage); padding:10px 22px; border-radius:var(--r12);
+    font-size:13px; font-weight:600; z-index:999; white-space:nowrap;
+    animation:toastUp 0.25s ease, toastOut 0.3s ease 2.7s forwards;
+    box-shadow:var(--sh-md);
   }
 `;
 
@@ -1060,6 +1342,33 @@ export default function VoxenApp() {
   const [roomsCreatedToday, setRoomsCreatedToday] = useState([]);
   const DAILY_LIMIT = 5;
 
+  // ── PHASE 2: GEO ────────────────────────────────────────
+  const [geoEnabled, setGeoEnabled] = useState(false);
+  const [userGeo, setUserGeo]       = useState(null); // { lat, lng }
+
+  // ── PHASE 2: HOME TABS ──────────────────────────────────
+  const [homeTab, setHomeTab]             = useState("my-rooms"); // "my-rooms" | "discover"
+  const [discoverFilter, setDiscoverFilter] = useState("all");
+
+  // ── PHASE 2: PUBLIC ROOMS (seed 8 rooms) ─────────────────
+  const [publicRooms, setPublicRooms] = useState(SEED_ROOMS);
+  const [joinedRooms, setJoinedRooms] = useState([]); // IDs of joined discover rooms
+
+  // ── PHASE 2: DMs ────────────────────────────────────────
+  const [activeDM, setActiveDM]       = useState(null); // userId
+  const [dmMessages, setDmMessages]   = useState({}); // { userId: [...messages] }
+  const [dmMsg, setDmMsg]             = useState("");
+
+  // ── PHASE 2: PREMIUM MODAL ──────────────────────────────
+  const [showPremium, setShowPremium] = useState(false);
+
+  // ── PHASE 2: IMAGE UPLOAD ───────────────────────────────
+  const [attachedImg, setAttachedImg] = useState(null); // base64
+  const fileRef = useRef(null);
+
+  // ── PHASE 2: SUCCESS TOAST ──────────────────────────────
+  const [successToast, setSuccessToast] = useState(null);
+
   const getRoomsRemaining = useCallback(() => {
     if (isVerified) return Infinity;
     const now = Date.now();
@@ -1100,6 +1409,7 @@ export default function VoxenApp() {
 
   const [createForm, setCreateForm] = useState({
     name:"", purpose:"", visibility:"public", limit:"50", customLimit:"", date:"", time:"",
+    radius:99999, // geo-radius for public rooms (default: Worldwide)
   });
 
   // ── CONNECTION STATE MAP ─────────────────────────────────
@@ -1212,6 +1522,7 @@ export default function VoxenApp() {
             initials: m.profiles?.initials || "??",
             grad: m.profiles?.avatar_color || "linear-gradient(135deg,#E8845A,#C4624A)",
             content: m.body, replyTo: null, reactions: m.reactions || [],
+            imageUrl: m.image_url || null,
           })),
         }));
       }
@@ -1237,6 +1548,7 @@ export default function VoxenApp() {
               initials: profile?.initials || "??",
               grad: profile?.avatar_color || "linear-gradient(135deg,#E8845A,#C4624A)",
               content: m.body, replyTo: null, reactions: m.reactions || [],
+              imageUrl: m.image_url || null,
             }],
           }));
         }
@@ -1285,6 +1597,92 @@ export default function VoxenApp() {
       time: new Date().toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }),
     }, ...prev]);
   }, []);
+
+  // ── SHOW SUCCESS TOAST ───────────────────────────────────
+  const showToast = useCallback((msg) => {
+    setSuccessToast(msg);
+    setTimeout(() => setSuccessToast(null), 3000);
+  }, []);
+
+  // ── REQUEST GEO LOCATION ────────────────────────────────
+  const requestGeo = useCallback(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserGeo({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setGeoEnabled(true);
+      },
+      () => { setGeoEnabled(false); }
+    );
+  }, []);
+
+  // ── JOIN DISCOVER ROOM ──────────────────────────────────
+  // Supabase: INSERT INTO room_members (room_id, user_id) VALUES (...)
+  const joinDiscoverRoom = useCallback((roomId) => {
+    setJoinedRooms(prev => [...prev, roomId]);
+    setPublicRooms(prev => prev.map(r => r.id === roomId ? { ...r, memberCount: r.memberCount + 1 } : r));
+    const room = publicRooms.find(r => r.id === roomId);
+    showToast(`Joined "${room?.name}" — check My Rooms!`);
+  }, [publicRooms, showToast]);
+
+  // ── LEAVE DISCOVER ROOM ─────────────────────────────────
+  // Supabase: DELETE FROM room_members WHERE room_id=? AND user_id=?
+  const leaveDiscoverRoom = useCallback((roomId) => {
+    setJoinedRooms(prev => prev.filter(id => id !== roomId));
+    setPublicRooms(prev => prev.map(r => r.id === roomId ? { ...r, memberCount: Math.max(0, r.memberCount - 1) } : r));
+    showToast("Left the room.");
+  }, [showToast]);
+
+  // ── SEND DM ─────────────────────────────────────────────
+  // Supabase: direct_messages table with sender_id, receiver_id, content, created_at
+  // + supabase.channel('direct-messages') realtime subscription
+  const sendDM = useCallback(() => {
+    const text = dmMsg.trim();
+    if (!text || !activeDM) return;
+    if (hasProfanity(text)) { setProfWarn(true); setTimeout(() => setProfWarn(false), 3000); return; }
+    const now = new Date().toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
+    const myMsg = { id: Date.now(), from: "me", content: text, time: now };
+    setDmMessages(prev => ({
+      ...prev,
+      [activeDM]: [...(prev[activeDM] || []), myMsg],
+    }));
+    setDmMsg("");
+    // Simulate reply after 1.5s
+    setTimeout(() => {
+      const reply = DM_REPLIES[Math.floor(Math.random() * DM_REPLIES.length)];
+      const replyTime = new Date().toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
+      setDmMessages(prev => ({
+        ...prev,
+        [activeDM]: [...(prev[activeDM] || []), { id: Date.now(), from: activeDM, content: reply, time: replyTime }],
+      }));
+    }, 1500);
+  }, [dmMsg, activeDM]);
+
+  // ── IMAGE ATTACH ────────────────────────────────────────
+  // Supabase: supabase.storage.from('chat-files').upload(path, file) then store public URL in messages table
+  const handleFileAttach = useCallback((e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File too large. Max size is 5MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setAttachedImg(reader.result); // base64 data URL
+    reader.readAsDataURL(file);
+  }, []);
+
+  // ── START PREMIUM (from Premium modal) ──────────────────
+  // Supabase: Stripe Checkout → webhook → UPDATE profiles SET verified=true
+  const handleStartPremium = useCallback(async () => {
+    setIsVerified(true);
+    setShowPremium(false);
+    if (user) {
+      await supabase.from("profiles").update({ is_verified: true, sub_plan: "monthly" }).eq("id", user.id);
+    }
+    showToast("⭐ You're now Voxen Premium!");
+    addNotif("⭐ <strong>Welcome to Voxen Premium!</strong> Verified badge, unlimited rooms, and more are now yours.");
+  }, [user, showToast, addNotif]);
 
   // ── SEND CONNECTION REQUEST ──────────────────────────────
   // This is the new flow: NONE → PENDING_SENT
@@ -1335,17 +1733,20 @@ export default function VoxenApp() {
   // ── SEND MESSAGE ─────────────────────────────────────────
   const sendMessage = useCallback(async () => {
     const text = newMsg.trim();
-    if (!text || !activeRoom || !user) return;
-    if (hasProfanity(text)) { setProfWarn(true); setTimeout(() => setProfWarn(false), 3000); return; }
+    if (!text && !attachedImg) return; // allow image-only messages
+    if (!activeRoom || !user) return;
+    if (text && hasProfanity(text)) { setProfWarn(true); setTimeout(() => setProfWarn(false), 3000); return; }
 
+    // Supabase: supabase.storage.from('chat-files').upload(path, file) for real image upload
     const { error } = await supabase.from("messages").insert({
       room_id: activeRoom.id,
       author_id: user.id,
-      body: text,
+      body: text || (attachedImg ? "📎 Image" : ""),
+      image_url: attachedImg || null,
     });
     if (error) { console.error("Send message error:", error); return; }
-    setNewMsg(""); setReplyingTo(null);
-  }, [newMsg, activeRoom, user, replyingTo]);
+    setNewMsg(""); setReplyingTo(null); setAttachedImg(null);
+  }, [newMsg, activeRoom, user, replyingTo, attachedImg]);
 
   // ── CREATE ROOM ──────────────────────────────────────────
   const createRoom = async () => {
@@ -1363,6 +1764,11 @@ export default function VoxenApp() {
       ? Math.min(1000, parseInt(createForm.customLimit) || 50)
       : parseInt(createForm.limit);
 
+    // Get geo data for public rooms
+    const geoLat = createForm.visibility === "public" && userGeo ? userGeo.lat : null;
+    const geoLng = createForm.visibility === "public" && userGeo ? userGeo.lng : null;
+    const geoRadius = createForm.visibility === "public" ? createForm.radius : null;
+
     const { data: room, error } = await supabase.from("rooms").insert({
       name: createForm.name.trim(),
       description: createForm.purpose.trim() || "No description yet.",
@@ -1371,6 +1777,8 @@ export default function VoxenApp() {
       member_limit: memberLimit,
       schedule_date: createForm.date || null,
       schedule_time: createForm.time || null,
+      // Phase 2: geo columns — store radius, lat, lng on the room object
+      // radius: geoRadius, lat: geoLat, lng: geoLng,
     }).select().single();
 
     if (error) { console.error("Create room error:", error); return; }
@@ -1378,11 +1786,15 @@ export default function VoxenApp() {
     // Track creation for daily limit
     await supabase.from("room_creations").insert({ user_id: user.id });
 
-    // Add to local state
+    // Build radius label for notification
+    const radiusLabel = RADIUS_OPTIONS.find(r => r.value === createForm.radius)?.label || "Worldwide";
+
+    // Add to local state (with geo data)
     setRooms(prev => [{
       id: room.id, name: room.name, desc: room.description,
       type: room.type, creatorId: room.creator_id, memberCount: 1,
       limit: room.member_limit,
+      radius: geoRadius, lat: geoLat, lng: geoLng,
       schedule: room.schedule_date && room.schedule_time ? { date: room.schedule_date, time: room.schedule_time } : null,
     }, ...prev]);
 
@@ -1391,8 +1803,13 @@ export default function VoxenApp() {
 
     setRoomsCreatedToday(prev => [...prev, Date.now()]);
     setShowCreate(false);
-    setCreateForm({ name:"", purpose:"", visibility:"public", limit:"50", customLimit:"", date:"", time:"" });
-    addNotif(`Your room <strong>${room.name}</strong> is ready. ${room.type === "public" ? "It's open for everyone." : "Invite your people."}`);
+    setCreateForm({ name:"", purpose:"", visibility:"public", limit:"50", customLimit:"", date:"", time:"", radius:99999 });
+
+    if (createForm.visibility === "public") {
+      addNotif(`📡 Your room <strong>${room.name}</strong> is now discoverable — radius: <strong>${radiusLabel}</strong>`);
+    } else {
+      addNotif(`Your room <strong>${room.name}</strong> is ready. Invite your people.`);
+    }
   };
 
   const deleteRoom = async (id) => {
@@ -1478,6 +1895,10 @@ export default function VoxenApp() {
     setAllMessages({}); setPinned({}); setEmail(""); setAuthPassword("");
     setAuthName(""); setAuthMode("login"); setAuthError("");
     setConnStates({ u1: CS.NONE, u2: CS.NONE, u3: CS.NONE, u4: CS.NONE });
+    setActiveDM(null); setDmMessages({}); setDmMsg("");
+    setJoinedRooms([]); setPublicRooms(SEED_ROOMS);
+    setHomeTab("my-rooms"); setDiscoverFilter("all");
+    setAttachedImg(null); setShowPremium(false);
   };
 
   const saveOnboardTopics = async () => {
@@ -1579,7 +2000,7 @@ export default function VoxenApp() {
         )}
 
         {/* ══ MAIN LAYOUT ══ */}
-        {["home","room","profile","people"].includes(view) && (
+        {["home","room","profile","people","messages"].includes(view) && (
           <div className="layout">
 
             {/* ── SIDEBAR ── */}
@@ -1624,6 +2045,14 @@ export default function VoxenApp() {
                 </div>
               )}
 
+              {/* Phase 2: Messages nav */}
+              <div className="sb-sect" style={{marginTop:12}}>Messages</div>
+              <div className={`sb-item${view==="messages"?" active":""}`} onClick={() => setView("messages")} style={{gap:7}}>
+                <span style={{fontSize:14}}>💬</span>
+                <span className="sb-iname">Direct Messages</span>
+                {Object.values(dmMessages).some(arr => arr.length > 0) && <span style={{width:6,height:6,borderRadius:"50%",background:"var(--clay)",flexShrink:0}} />}
+              </div>
+
               <div className="sb-footer">
                 <div className="sb-user" onClick={() => setView("profile")}>
                   <div className="av av-sm" style={{background:"linear-gradient(135deg,#E8845A,#C4624A)"}}>
@@ -1631,7 +2060,7 @@ export default function VoxenApp() {
                     <span className="pip pip-sm" style={{background:SC[S.ONLINE]}}></span>
                   </div>
                   <div style={{flex:1, minWidth:0}}>
-                    <div className="sb-uname">{user?.name}{isVerified && <span className="verified-badge" title="Verified">✓</span>}</div>
+                    <div className="sb-uname">{user?.name}{isVerified && <span className="verified-badge" title="Verified">✓</span>}{isVerified && <span style={{marginLeft:3}}>⭐</span>}</div>
                     <div className="sb-uhandle">{user?.handle}</div>
                   </div>
                   <button className="sb-gear" onClick={e=>{e.stopPropagation();setShowSettings(true);}}>⚙</button>
@@ -1645,7 +2074,7 @@ export default function VoxenApp() {
               <div className="topbar">
                 <div className="tb-crumb">
                   <span className="tb-live"></span>
-                  {view==="home" ? "Voxen" : view==="room" ? activeRoom?.name : view==="profile" ? "Profile" : "People"}
+                  {view==="home" ? "Voxen" : view==="room" ? activeRoom?.name : view==="profile" ? "Profile" : view==="messages" ? "Messages" : "People"}
                 </div>
 
                 <div className="srch-wrap" ref={searchRef}>
@@ -1677,6 +2106,9 @@ export default function VoxenApp() {
                 </div>
 
                 <div className="tb-right">
+                  <div className="ico-btn" onClick={() => setView("messages")} title="Messages">
+                    💬
+                  </div>
                   <div className="ico-btn" onClick={() => setShowNotifs(!showNotifs)}>
                     🔔
                     {unreadCount > 0 && <span className="notif-pip">{unreadCount}</span>}
@@ -1730,62 +2162,170 @@ export default function VoxenApp() {
                     <h2>Welcome back, {user?.name} 👋</h2>
                     <p>Focused rooms for focused minds. No noise, no algorithms — just depth.</p>
                   </div>
-                  {!isVerified && getRoomsRemaining() <= 2 && getRoomsRemaining() > 0 && (
-                    <div className="limit-banner">
-                      <div className="limit-banner-icon">⏳</div>
-                      <div className="limit-banner-text">
-                        <div className="limit-banner-title">{getRoomsRemaining()} Circle{getRoomsRemaining()!==1?"s":""} remaining today</div>
-                        <div className="limit-banner-sub">Free accounts can create 5 Circles per day</div>
-                      </div>
-                      <button className="btn-primary" style={{padding:"7px 14px",fontSize:11}} onClick={() => setShowSettings(true)}>Get Verified</button>
-                    </div>
-                  )}
-                  {!isVerified && getRoomsRemaining() <= 0 && (
-                    <div className="limit-banner">
-                      <div className="limit-banner-icon">🚫</div>
-                      <div className="limit-banner-text">
-                        <div className="limit-banner-title">Daily limit reached</div>
-                        <div className="limit-banner-sub">Upgrade to Verified for unlimited Circles</div>
-                      </div>
-                      <button className="btn-primary" style={{padding:"7px 14px",fontSize:11}} onClick={() => setShowSettings(true)}>Upgrade</button>
-                    </div>
-                  )}
-                  <div className="home-row">
-                    <h3>Your Rooms</h3>
-                    <button className="btn-primary" style={{padding:"8px 16px",fontSize:13}} onClick={() => setShowCreate(true)}>+ New Room</button>
+
+                  {/* Phase 2: Home Tabs — My Rooms / Discover */}
+                  <div className="home-tabs">
+                    <button className={`home-tab${homeTab==="my-rooms"?" active":""}`} onClick={() => setHomeTab("my-rooms")}>
+                      🏠 My Rooms
+                    </button>
+                    <button className={`home-tab${homeTab==="discover"?" active":""}`} onClick={() => setHomeTab("discover")}>
+                      🔍 Discover
+                    </button>
                   </div>
-                  {rooms.length === 0 ? (
-                    <div className="empty">
-                      <div className="empty-ico">◈</div>
-                      <div className="empty-title">No rooms yet</div>
-                      <div className="empty-sub">Create a public room for open discussion, or a private room for your inner circle.</div>
-                      <button className="btn-primary" style={{marginTop:10}} onClick={() => setShowCreate(true)}>Create your first Room</button>
-                    </div>
-                  ) : (
-                    <div className="rooms-grid">
-                      <div className="room-card new-card" onClick={() => setShowCreate(true)}>
-                        <div style={{fontSize:22}}>+</div>
-                        <div style={{fontFamily:"var(--hf)",fontWeight:600,fontSize:13}}>New Room</div>
-                        <div style={{fontSize:10,opacity:0.7,letterSpacing:"0.05em",textTransform:"uppercase"}}>
-                          {isVerified ? "Unlimited" : `${getRoomsRemaining()} left today`}
-                        </div>
-                      </div>
-                      {rooms.map(r => (
-                        <div key={r.id} className="room-card" onClick={() => enterRoom(r)}>
-                          <div className="rc-type">{r.type==="public"?"🌐":"🔒"}</div>
-                          <div className="rc-name">{r.name}</div>
-                          <div className="rc-desc">{r.desc}</div>
-                          <div className="rc-foot">
-                            <div className="rc-mem">
-                              <div className="rc-avs">{[...Array(Math.min(r.memberCount,3))].map((_,i)=><div key={i} className="rc-av">{i+1}</div>)}</div>
-                              <span>{r.memberCount}</span>
-                            </div>
-                            <button className="btn-enter" onClick={e=>{e.stopPropagation();enterRoom(r);}}>Enter</button>
+
+                  {/* ─── MY ROOMS TAB ─── */}
+                  {homeTab === "my-rooms" && (
+                    <>
+                      {!isVerified && getRoomsRemaining() <= 2 && getRoomsRemaining() > 0 && (
+                        <div className="limit-banner">
+                          <div className="limit-banner-icon">⏳</div>
+                          <div className="limit-banner-text">
+                            <div className="limit-banner-title">{getRoomsRemaining()} Circle{getRoomsRemaining()!==1?"s":""} remaining today</div>
+                            <div className="limit-banner-sub">Free accounts can create 5 Circles per day</div>
                           </div>
+                          <button className="btn-primary" style={{padding:"7px 14px",fontSize:11}} onClick={() => setShowSettings(true)}>Get Verified</button>
                         </div>
-                      ))}
-                    </div>
+                      )}
+                      {!isVerified && getRoomsRemaining() <= 0 && (
+                        <div className="limit-banner">
+                          <div className="limit-banner-icon">🚫</div>
+                          <div className="limit-banner-text">
+                            <div className="limit-banner-title">Daily limit reached</div>
+                            <div className="limit-banner-sub">Upgrade to Verified for unlimited Circles</div>
+                          </div>
+                          <button className="btn-primary" style={{padding:"7px 14px",fontSize:11}} onClick={() => setShowSettings(true)}>Upgrade</button>
+                        </div>
+                      )}
+                      <div className="home-row">
+                        <h3>Your Rooms</h3>
+                        <button className="btn-primary" style={{padding:"8px 16px",fontSize:13}} onClick={() => setShowCreate(true)}>+ New Room</button>
+                      </div>
+                      {rooms.length === 0 && joinedRooms.length === 0 ? (
+                        <div className="empty">
+                          <div className="empty-ico">◈</div>
+                          <div className="empty-title">No rooms yet</div>
+                          <div className="empty-sub">Create a public room for open discussion, or a private room for your inner circle.</div>
+                          <button className="btn-primary" style={{marginTop:10}} onClick={() => setShowCreate(true)}>Create your first Room</button>
+                        </div>
+                      ) : (
+                        <div className="rooms-grid">
+                          <div className="room-card new-card" onClick={() => setShowCreate(true)}>
+                            <div style={{fontSize:22}}>+</div>
+                            <div style={{fontFamily:"var(--hf)",fontWeight:600,fontSize:13}}>New Room</div>
+                            <div style={{fontSize:10,opacity:0.7,letterSpacing:"0.05em",textTransform:"uppercase"}}>
+                              {isVerified ? "Unlimited" : `${getRoomsRemaining()} left today`}
+                            </div>
+                          </div>
+                          {rooms.map(r => (
+                            <div key={r.id} className="room-card" onClick={() => enterRoom(r)}>
+                              <div className="rc-type">{r.type==="public"?"🌐":"🔒"}</div>
+                              <div className="rc-name">{r.name}</div>
+                              <div className="rc-desc">{r.desc}</div>
+                              {r.type === "public" && r.radius && (
+                                <div style={{marginBottom:10}}>
+                                  <span className="geo-badge">📡 {RADIUS_OPTIONS.find(o=>o.value===r.radius)?.label || "Worldwide"}</span>
+                                </div>
+                              )}
+                              <div className="rc-foot">
+                                <div className="rc-mem">
+                                  <div className="rc-avs">{[...Array(Math.min(r.memberCount,3))].map((_,i)=><div key={i} className="rc-av">{i+1}</div>)}</div>
+                                  <span>{r.memberCount}</span>
+                                </div>
+                                <button className="btn-enter" onClick={e=>{e.stopPropagation();enterRoom(r);}}>Enter</button>
+                              </div>
+                            </div>
+                          ))}
+                          {/* Show joined discover rooms in My Rooms */}
+                          {publicRooms.filter(r => joinedRooms.includes(r.id)).map(r => (
+                            <div key={r.id} className="room-card">
+                              <div className="rc-type">🌐</div>
+                              <div className="rc-name">{r.name}</div>
+                              <div className="rc-desc">{r.desc}</div>
+                              {r.radius && (
+                                <div style={{marginBottom:10}}>
+                                  <span className="geo-badge">📡 {RADIUS_OPTIONS.find(o=>o.value===r.radius)?.label || "Worldwide"}</span>
+                                </div>
+                              )}
+                              <div className="rc-foot">
+                                <div className="rc-mem">
+                                  <span>{r.memberCount} members</span>
+                                </div>
+                                <button className="btn-leave" onClick={() => leaveDiscoverRoom(r.id)}>Leave</button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
                   )}
+
+                  {/* ─── DISCOVER TAB ─── */}
+                  {homeTab === "discover" && (() => {
+                    // Supabase: SELECT * FROM rooms WHERE visibility='public' ORDER BY created_at DESC
+                    let filtered = publicRooms;
+                    if (discoverFilter !== "all") {
+                      filtered = filtered.filter(r => r.topic.toLowerCase() === discoverFilter.toLowerCase());
+                    }
+                    // Near me filtering
+                    if (geoEnabled && userGeo) {
+                      filtered = filtered.filter(r => {
+                        if (!r.lat || !r.lng) return true;
+                        const dist = haversineMiles(userGeo.lat, userGeo.lng, r.lat, r.lng);
+                        return dist <= r.radius;
+                      });
+                    }
+                    return (
+                      <>
+                        <div className="discover-filters">
+                          {DISCOVER_TOPICS.map(t => (
+                            <button key={t} className={`filter-chip${discoverFilter===t.toLowerCase()||( t==="All"&&discoverFilter==="all")?" sel":""}`}
+                              onClick={() => setDiscoverFilter(t === "All" ? "all" : t)}>
+                              {t}
+                            </button>
+                          ))}
+                          <button className={`nearme-toggle${geoEnabled?" on":""}`} onClick={() => {
+                            if (!geoEnabled) requestGeo(); else setGeoEnabled(false);
+                          }}>
+                            📍 {geoEnabled ? "Near me ✓" : "Near me"}
+                          </button>
+                        </div>
+                        {filtered.length === 0 ? (
+                          <div className="empty">
+                            <div className="empty-ico">🔍</div>
+                            <div className="empty-title">No rooms found</div>
+                            <div className="empty-sub">Try a different filter or expand your radius.</div>
+                          </div>
+                        ) : (
+                          <div className="discover-grid">
+                            {filtered.map(r => {
+                              const isJoined = joinedRooms.includes(r.id);
+                              return (
+                                <div key={r.id} className="discover-card">
+                                  <div className="dc-header">
+                                    <div className="dc-name">{r.name}</div>
+                                    <span className="geo-badge">📡 {RADIUS_OPTIONS.find(o=>o.value===r.radius)?.label || "Worldwide"}</span>
+                                  </div>
+                                  <div className="dc-creator">by {r.creatorName}</div>
+                                  <div className="dc-desc">{r.desc}</div>
+                                  <div className="dc-foot">
+                                    <div className="dc-meta">
+                                      <span className="dc-members">👥 {r.memberCount}</span>
+                                      <span style={{padding:"2px 8px",background:"rgba(92,184,130,0.1)",borderRadius:"var(--r99)",fontSize:10,fontWeight:600,color:"var(--sage)"}}>{r.topic}</span>
+                                    </div>
+                                    {isJoined ? (
+                                      <button className="btn-open" onClick={() => showToast(`Opening "${r.name}"…`)}>Open</button>
+                                    ) : (
+                                      <button className="btn-join" onClick={() => joinDiscoverRoom(r.id)}>+ Join</button>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               )}
 
@@ -1850,6 +2390,7 @@ export default function VoxenApp() {
                               </div>
                               {m.replyTo && <div className="msg-reply">Replying to <span>@{m.replyTo}</span></div>}
                               <div className="msg-body">{m.content}</div>
+                              {m.imageUrl && <img src={m.imageUrl} className="msg-img" alt="Attached" />}
                               <div className="msg-foot">
                                 <button className={`react-btn${m.reactions.includes("insightful")?" on":""}`} onClick={()=>toggleReaction(m.id,"insightful")}>💡 Insightful</button>
                                 <button className={`react-btn${m.reactions.includes("helpful")?" on":""}`} onClick={()=>toggleReaction(m.id,"helpful")}>🤝 Helpful</button>
@@ -1866,8 +2407,19 @@ export default function VoxenApp() {
                             <button onClick={() => setReplyingTo(null)}>✕</button>
                           </div>
                         )}
+                        {/* Phase 2: Image preview above composer */}
+                        {attachedImg && (
+                          <div className="img-preview">
+                            <img src={attachedImg} alt="Attached" />
+                            <span style={{fontSize:12,color:"var(--t2)"}}>Image attached</span>
+                            <button className="img-preview-remove" onClick={() => setAttachedImg(null)}>✕</button>
+                          </div>
+                        )}
                         <div className="composer">
                           <div className="cmp-inner">
+                            {/* Phase 2: Paperclip button for image upload */}
+                            <input type="file" accept="image/*" ref={fileRef} style={{display:"none"}} onChange={handleFileAttach} />
+                            <button className="cmp-attach" onClick={() => fileRef.current?.click()} title="Attach image">📎</button>
                             <textarea className="cmp-ta" rows={1} placeholder={activeRoom.type==="public"?"Share your thoughts publicly...":"Write to your room..."} value={newMsg} onChange={e=>setNewMsg(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage();}}} />
                             <button className="cmp-send" onClick={sendMessage}>→</button>
                           </div>
@@ -2004,6 +2556,93 @@ export default function VoxenApp() {
                 </div>
               )}
 
+              {/* ── MESSAGES (DMs) ── */}
+              {view === "messages" && (
+                <div className="dm-layout">
+                  {/* DM Sidebar — list of accepted connections */}
+                  <div className="dm-sidebar">
+                    <div className="dm-sb-head">Messages</div>
+                    <div className="dm-list">
+                      {acceptedUserIds.length === 0 ? (
+                        <div className="dm-empty-sb">
+                          <div className="dm-empty-sb-ico">💬</div>
+                          <div className="dm-empty-sb-text">Connect with people first. Only accepted connections can be DM'd.</div>
+                        </div>
+                      ) : (
+                        DEMO_USERS.filter(u => acceptedUserIds.includes(u.id)).map(u => {
+                          const lastMsgs = dmMessages[u.id] || [];
+                          const lastMsg = lastMsgs[lastMsgs.length - 1];
+                          return (
+                            <div key={u.id} className={`dm-item${activeDM===u.id?" active":""}`} onClick={() => setActiveDM(u.id)}>
+                              <div className="av av-sm" style={{background:avatarGrad(u.hue)}}>
+                                {u.initials}
+                                <span className="pip pip-sm" style={{background:SC[u.status]}}></span>
+                              </div>
+                              <div className="dm-item-info">
+                                <div className="dm-item-name">{u.name}</div>
+                                <div className="dm-item-preview">{lastMsg ? lastMsg.content : "No messages yet"}</div>
+                              </div>
+                              {lastMsg && <span className="dm-item-time">{lastMsg.time}</span>}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                  {/* DM Chat Area */}
+                  <div className="dm-main">
+                    {!activeDM || !acceptedUserIds.includes(activeDM) ? (
+                      <div className="dm-no-select">
+                        <div className="dm-no-select-ico">💬</div>
+                        <div className="dm-no-select-text">Select a conversation to start messaging</div>
+                      </div>
+                    ) : (() => {
+                      const dmUser = DEMO_USERS.find(u => u.id === activeDM);
+                      const msgs = dmMessages[activeDM] || [];
+                      return (
+                        <>
+                          <div className="dm-header">
+                            <div className="av av-sm" style={{background:avatarGrad(dmUser.hue)}}>
+                              {dmUser.initials}
+                              <span className="pip pip-sm" style={{background:SC[dmUser.status]}}></span>
+                            </div>
+                            <div>
+                              <div className="dm-header-name">{dmUser.name}</div>
+                              <div className="dm-header-status"><span style={{color:SC[dmUser.status]}}>●</span> {SL[dmUser.status]}</div>
+                            </div>
+                          </div>
+                          <div className="dm-msgs">
+                            {msgs.length === 0 && (
+                              <div className="empty" style={{padding:"40px 20px"}}>
+                                <div className="empty-ico">💬</div>
+                                <div className="empty-title">Start talking</div>
+                                <div className="empty-sub">Say hello to {dmUser.name}!</div>
+                              </div>
+                            )}
+                            {msgs.map(m => (
+                              <div key={m.id} className={`dm-bubble ${m.from === "me" ? "mine" : "theirs"}`}>
+                                <div>{m.content}</div>
+                                <div className="dm-bubble-time">{m.time}</div>
+                              </div>
+                            ))}
+                            <div ref={msgsEnd} />
+                          </div>
+                          <div className="dm-composer">
+                            <div className="dm-cmp-inner">
+                              <textarea className="cmp-ta" rows={1} placeholder={`Message ${dmUser.name}...`}
+                                value={dmMsg} onChange={e => setDmMsg(e.target.value)}
+                                onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendDM(); } }}
+                              />
+                              <button className="cmp-send" onClick={sendDM}>→</button>
+                            </div>
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                </div>
+              )}
+
               {/* ── PROFILE ── */}
               {view === "profile" && user && (
                 <div className="profile-page">
@@ -2015,7 +2654,7 @@ export default function VoxenApp() {
                         <span className="pip pip-lg" style={{background:SC[S.ONLINE]}}></span>
                       </div>
                       <div className="profile-info">
-                        <div className="profile-name">{user.name}{isVerified && <span className="verified-badge-lg" title="Verified">✓</span>}</div>
+                        <div className="profile-name">{user.name}{isVerified && <span className="verified-badge-lg" title="Verified">⭐</span>}</div>
                         <div className="profile-handle">{user.handle}</div>
                         <div className="profile-chips">
                           <span className="badge badge-pub">● Online</span>
@@ -2033,6 +2672,9 @@ export default function VoxenApp() {
                     <div className="prof-sec">My Rooms</div>
                     {rooms.length === 0 ? <div style={{fontSize:13,color:"var(--t2)",fontStyle:"italic"}}>No rooms created yet.</div> : rooms.map(r=><div key={r.id} className="room-list-row" onClick={()=>enterRoom(r)}>{r.name}</div>)}
                     <div className="prof-actions">
+                      {!isVerified && (
+                        <button className="btn-primary" onClick={() => setShowPremium(true)}>⭐ Upgrade to Premium</button>
+                      )}
                       <button className="btn-ghost" onClick={() => setShowSettings(true)}>⚙ Settings</button>
                       <button className="btn-danger" onClick={signOut}>Sign Out</button>
                     </div>
@@ -2062,13 +2704,28 @@ export default function VoxenApp() {
                 </div>
               </div>
               {createForm.visibility==="public" && (
-                <div className="field">
-                  <div className="fl">Member Limit</div>
-                  <div className="chip-row">
-                    {["20","40","50","100","Custom"].map(l => <div key={l} className={`chip${createForm.limit===l?" sel":""}`} onClick={()=>setCreateForm({...createForm,limit:l})}>{l==="Custom"?"Custom (max 1,000)":l}</div>)}
+                <>
+                  <div className="field">
+                    <div className="fl">Member Limit</div>
+                    <div className="chip-row">
+                      {["20","40","50","100","Custom"].map(l => <div key={l} className={`chip${createForm.limit===l?" sel":""}`} onClick={()=>setCreateForm({...createForm,limit:l})}>{l==="Custom"?"Custom (max 1,000)":l}</div>)}
+                    </div>
+                    {createForm.limit==="Custom" && <input className="fi" type="number" style={{marginTop:8,width:170}} min={1} max={1000} placeholder="Max 1,000" value={createForm.customLimit} onChange={e=>setCreateForm({...createForm,customLimit:String(Math.min(1000,Math.max(1,parseInt(e.target.value)||1)))})} />}
                   </div>
-                  {createForm.limit==="Custom" && <input className="fi" type="number" style={{marginTop:8,width:170}} min={1} max={1000} placeholder="Max 1,000" value={createForm.customLimit} onChange={e=>setCreateForm({...createForm,customLimit:String(Math.min(1000,Math.max(1,parseInt(e.target.value)||1)))})} />}
-                </div>
+                  {/* Phase 2: Geo-radius selector for public rooms */}
+                  <div className="field">
+                    <div className="fl">Broadcast Radius 📡</div>
+                    <div style={{fontSize:11,color:"var(--t2)",marginBottom:8}}>How far should your room be discoverable?</div>
+                    <div className="radius-grid">
+                      {RADIUS_OPTIONS.map(o => (
+                        <div key={o.value} className={`radius-opt${createForm.radius===o.value?" sel":""}`}
+                          onClick={() => setCreateForm({...createForm, radius:o.value})}>
+                          {o.label}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
               )}
               {createForm.visibility==="private" && (
                 <div className="field">
@@ -2226,6 +2883,28 @@ export default function VoxenApp() {
           </div>
         )}
 
+        {/* ══ PREMIUM MODAL ══ */}
+        {showPremium && (
+          <div className="overlay" onClick={() => setShowPremium(false)}>
+            <div className="modal premium-modal" onClick={e => e.stopPropagation()}>
+              <div className="pm-star">⭐</div>
+              <div className="pm-title">Voxen Premium</div>
+              <div className="pm-price">$4.99 <span>/ month</span></div>
+              <div className="pm-features">
+                <div className="pm-feat"><span className="pm-feat-ico">⭐</span> Verified badge on your profile and rooms</div>
+                <div className="pm-feat"><span className="pm-feat-ico">🚀</span> Unlimited room creation (free = 5/day)</div>
+                <div className="pm-feat"><span className="pm-feat-ico">📡</span> Worldwide radius on all public rooms</div>
+                <div className="pm-feat"><span className="pm-feat-ico">📎</span> Image uploads in chat</div>
+                <div className="pm-feat"><span className="pm-feat-ico">🎯</span> Priority in discovery feed</div>
+              </div>
+              <div className="pm-actions">
+                <button className="pm-start" onClick={handleStartPremium}>Start Free Trial</button>
+                <button className="pm-cancel" onClick={() => setShowPremium(false)}>Cancel</button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ══ CALL MODAL ══ */}
         {showCall && (
           <div className="call-overlay" onClick={() => setShowCall(null)}>
@@ -2246,6 +2925,10 @@ export default function VoxenApp() {
 
         {profWarn && (
           <div className="warn-toast">🚫 Message blocked — Voxen requires clean, respectful language.</div>
+        )}
+
+        {successToast && (
+          <div className="success-toast">{successToast}</div>
         )}
       </div>
     </>

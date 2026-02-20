@@ -26,6 +26,7 @@ Users create "Circles" (rooms), have real-time conversations, connect with other
 
 ## Live URL
 
+0
 **Production:** Deployed on Vercel (auto-deploys from `main` branch)  
 **GitHub:** [github.com/samisback2024/Voxen](https://github.com/samisback2024/Voxen)  
 **Supabase Project:** `gpkhehcnsggwjejkwuyv`
@@ -34,16 +35,16 @@ Users create "Circles" (rooms), have real-time conversations, connect with other
 
 ## Tech Stack
 
-| Layer        | Technology                        | Purpose                              |
-|-------------|-----------------------------------|--------------------------------------|
-| Frontend    | React 19.2 + Vite 7.3             | SPA with HMR dev server             |
-| Styling     | CSS-in-JS (template literal)      | Single `const CSS` block, no deps   |
-| Fonts       | Plus Jakarta Sans + Lora           | Warm, human typography              |
-| Auth        | Supabase Auth (email/password)    | Signup, login, session management   |
-| Database    | Supabase (PostgreSQL)             | Profiles, rooms, messages, etc.     |
-| Realtime    | Supabase Realtime (WebSocket)     | Live message streaming in rooms     |
-| Hosting     | Vercel                            | Static build + CDN + auto-deploy    |
-| Version Ctrl| Git + GitHub                      | Source control + CI/CD trigger      |
+| Layer        | Technology                     | Purpose                           |
+| ------------ | ------------------------------ | --------------------------------- |
+| Frontend     | React 19.2 + Vite 7.3          | SPA with HMR dev server           |
+| Styling      | CSS-in-JS (template literal)   | Single `const CSS` block, no deps |
+| Fonts        | Plus Jakarta Sans + Lora       | Warm, human typography            |
+| Auth         | Supabase Auth (email/password) | Signup, login, session management |
+| Database     | Supabase (PostgreSQL)          | Profiles, rooms, messages, etc.   |
+| Realtime     | Supabase Realtime (WebSocket)  | Live message streaming in rooms   |
+| Hosting      | Vercel                         | Static build + CDN + auto-deploy  |
+| Version Ctrl | Git + GitHub                   | Source control + CI/CD trigger    |
 
 ---
 
@@ -63,6 +64,7 @@ Users create "Circles" (rooms), have real-time conversations, connect with other
 ```
 
 **Key design decisions:**
+
 - **Single-file component:** The entire app lives in `VoxenApp.jsx` (~2260 lines). This is intentional for Phase 1 — keeps everything visible and self-contained. Phase 2 should split into modules.
 - **CSS-in-JS via template literal:** All styles are in a `const CSS` string injected via `<style>{CSS}</style>`. No build tool config needed. Phase 2 could migrate to CSS Modules or Tailwind.
 - **No external UI library:** Every component (modals, cards, buttons, avatars) is hand-built. Keeps bundle small (~130KB gzipped).
@@ -96,12 +98,12 @@ voxen/
 
 ### Key Files
 
-| File | Lines | What It Does |
-|------|-------|-------------|
-| `VoxenApp.jsx` | ~2260 | Everything: CSS, constants, mock data, state, Supabase queries, all views (auth, onboard, home, room, profile, people, settings, create modal, invite modal, call modal) |
-| `supabase.js` | ~10 | Creates and exports the Supabase client using env vars |
-| `supabase-schema.sql` | ~178 | Full database schema — tables, indexes, RLS policies, trigger for auto-profile creation, realtime config |
-| `vercel.json` | ~5 | SPA catch-all rewrite so routes don't 404 on Vercel |
+| File                  | Lines | What It Does                                                                                                                                                             |
+| --------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `VoxenApp.jsx`        | ~2260 | Everything: CSS, constants, mock data, state, Supabase queries, all views (auth, onboard, home, room, profile, people, settings, create modal, invite modal, call modal) |
+| `supabase.js`         | ~10   | Creates and exports the Supabase client using env vars                                                                                                                   |
+| `supabase-schema.sql` | ~178  | Full database schema — tables, indexes, RLS policies, trigger for auto-profile creation, realtime config                                                                 |
+| `vercel.json`         | ~5    | SPA catch-all rewrite so routes don't 404 on Vercel                                                                                                                      |
 
 ---
 
@@ -109,16 +111,16 @@ voxen/
 
 ### Color Palette
 
-| Token      | Hex/Value     | Usage                          |
-|-----------|---------------|--------------------------------|
-| `--ink`   | `#120F0C`     | Deepest background             |
-| `--bg`    | `#1A1410`     | App background                 |
-| `--surf`  | `#231E18`     | Card/surface background        |
-| `--brd`   | `#3A332B`     | Borders                        |
-| `--clay`  | `#E8845A`     | Primary accent (terracotta)    |
-| `--sky`   | `#6B9EFF`     | Secondary accent (links, info) |
-| `--t1`    | `#F5EDE4`     | Primary text                   |
-| `--t2`    | `#A89B8C`     | Secondary text                 |
+| Token    | Hex/Value | Usage                          |
+| -------- | --------- | ------------------------------ |
+| `--ink`  | `#120F0C` | Deepest background             |
+| `--bg`   | `#1A1410` | App background                 |
+| `--surf` | `#231E18` | Card/surface background        |
+| `--brd`  | `#3A332B` | Borders                        |
+| `--clay` | `#E8845A` | Primary accent (terracotta)    |
+| `--sky`  | `#6B9EFF` | Secondary accent (links, info) |
+| `--t1`   | `#F5EDE4` | Primary text                   |
+| `--t2`   | `#A89B8C` | Secondary text                 |
 
 ### Typography
 
@@ -139,6 +141,7 @@ voxen/
 ## Features (Phase 1 — Complete)
 
 ### Authentication
+
 - [x] Email + password signup/login via Supabase Auth
 - [x] Auto-profile creation on signup (trigger function)
 - [x] Persistent sessions (survives page refresh)
@@ -147,11 +150,13 @@ voxen/
 - [x] Error messages for invalid credentials, rate limits
 
 ### Onboarding
+
 - [x] Topic selection (3–5 from curated + searchable list)
 - [x] Topics saved to user profile in Supabase
 - [x] Skip onboarding on subsequent logins if topics already set
 
 ### Rooms (Circles)
+
 - [x] Create rooms with name, purpose, visibility (public/private), member limit
 - [x] Schedule rooms with date/time
 - [x] Calendar export (ICS download + Google Calendar link)
@@ -162,6 +167,7 @@ voxen/
 - [x] Rooms persisted in Supabase `rooms` table
 
 ### Real-Time Chat
+
 - [x] Send messages in rooms (persisted in Supabase)
 - [x] Real-time message streaming via Supabase Realtime (WebSocket)
 - [x] Auto-scroll to latest message
@@ -170,24 +176,28 @@ voxen/
 - [x] Profanity filter (client-side word list)
 
 ### Connections (Partially Implemented)
+
 - [x] Connection state machine: NONE → PENDING_SENT → ACCEPTED
 - [x] Send/accept/decline connection requests
 - [x] Notification system for connection events
 - [ ] **Not yet wired to Supabase** — uses local mock state + `DEMO_USERS`
 
 ### Verified Badge & Subscription
+
 - [x] Monthly ($4/mo) and Annual ($30/yr) plan toggle
 - [x] Purchase persisted to Supabase `profiles` table
 - [x] Verified checkmark on profile
 - [x] Unlocks unlimited rooms/day
 
 ### Profile & Settings
+
 - [x] Profile page with name, handle, initials, interests, rooms
 - [x] Privacy toggles (public profile, show status, allow connections, email notifications)
 - [x] Settings saved to Supabase
 - [x] Change password with validation
 
 ### UI/UX
+
 - [x] Warm charcoal design with terracotta accents
 - [x] Aurora background glow effects
 - [x] Animated borders and shimmer buttons
@@ -228,6 +238,7 @@ profiles    ──1:N──▶  room_creations
 ### Row Level Security (RLS)
 
 All tables have RLS enabled:
+
 - **Profiles:** Anyone can read; users update only their own
 - **Rooms:** Public rooms visible to all; private rooms visible to members/creator
 - **Messages:** Readable in public rooms or rooms you're a member of; only author can insert
@@ -280,9 +291,9 @@ The function extracts `name`, `handle`, and `initials` from the signup metadata 
 
 ## Environment Variables
 
-| Variable | Where | Value |
-|----------|-------|-------|
-| `VITE_SUPABASE_URL` | `.env` (local) + Vercel | `https://gpkhehcnsggwjejkwuyv.supabase.co` |
+| Variable                 | Where                   | Value                                                    |
+| ------------------------ | ----------------------- | -------------------------------------------------------- |
+| `VITE_SUPABASE_URL`      | `.env` (local) + Vercel | `https://gpkhehcnsggwjejkwuyv.supabase.co`               |
 | `VITE_SUPABASE_ANON_KEY` | `.env` (local) + Vercel | `sb_publishable_...` (safe to expose, RLS protects data) |
 
 **Important:** The `VITE_` prefix is required for Vite to expose env vars to the client bundle.
@@ -311,12 +322,12 @@ npm run dev
 
 ### Commands
 
-| Command | What It Does |
-|---------|-------------|
-| `npm run dev` | Start Vite dev server with HMR |
-| `npm run build` | Production build to `dist/` |
+| Command           | What It Does                     |
+| ----------------- | -------------------------------- |
+| `npm run dev`     | Start Vite dev server with HMR   |
+| `npm run build`   | Production build to `dist/`      |
 | `npm run preview` | Preview production build locally |
-| `npm run lint` | Run ESLint |
+| `npm run lint`    | Run ESLint                       |
 
 ---
 
@@ -344,44 +355,44 @@ npm run dev
 
 ### Priority 1 — Core Functionality
 
-| Feature | Description | Complexity |
-|---------|-------------|------------|
-| **Real connections** | Replace `DEMO_USERS` mock with real user discovery from `profiles` table. Wire connection requests to `connections` table in Supabase. | Medium |
-| **Direct messaging** | 1:1 chat between connected users. New `direct_messages` table. | Medium |
-| **Join public rooms** | Currently only creators see rooms. Add "Browse & Join" for all public rooms. | Easy |
-| **Room member list** | Show who's in a room, pull from `room_members` table. | Easy |
+| Feature               | Description                                                                                                                            | Complexity |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| **Real connections**  | Replace `DEMO_USERS` mock with real user discovery from `profiles` table. Wire connection requests to `connections` table in Supabase. | Medium     |
+| **Direct messaging**  | 1:1 chat between connected users. New `direct_messages` table.                                                                         | Medium     |
+| **Join public rooms** | Currently only creators see rooms. Add "Browse & Join" for all public rooms.                                                           | Easy       |
+| **Room member list**  | Show who's in a room, pull from `room_members` table.                                                                                  | Easy       |
 
 ### Priority 2 — User Experience
 
-| Feature | Description | Complexity |
-|---------|-------------|------------|
-| **Google OAuth** | Enable in Supabase Auth → Providers → Google. Needs Google Cloud OAuth credentials. | Easy |
-| **Password reset** | Supabase supports magic link / reset email out of the box. | Easy |
-| **User search** | Search real users by name/handle from `profiles` table. | Easy |
-| **Profile editing** | Let users update name, bio, avatar color. | Easy |
-| **Error boundaries** | React error boundary to prevent blank screens on crashes. | Easy |
+| Feature              | Description                                                                         | Complexity |
+| -------------------- | ----------------------------------------------------------------------------------- | ---------- |
+| **Google OAuth**     | Enable in Supabase Auth → Providers → Google. Needs Google Cloud OAuth credentials. | Easy       |
+| **Password reset**   | Supabase supports magic link / reset email out of the box.                          | Easy       |
+| **User search**      | Search real users by name/handle from `profiles` table.                             | Easy       |
+| **Profile editing**  | Let users update name, bio, avatar color.                                           | Easy       |
+| **Error boundaries** | React error boundary to prevent blank screens on crashes.                           | Easy       |
 
 ### Priority 3 — Advanced Features
 
-| Feature | Description | Complexity |
-|---------|-------------|------------|
-| **File uploads** | Images/files in chat via Supabase Storage. | Medium |
-| **Push notifications** | Browser push API + service worker for offline alerts. | Hard |
-| **Voice/video calls** | WebRTC peer-to-peer calling. Needs signaling server. | Hard |
-| **Admin dashboard** | Manage users, rooms, reports. Separate admin role. | Medium |
-| **Stripe payments** | Real subscription billing for Verified badge. | Medium |
-| **Custom domains** | Point `voxen.app` or similar to Vercel. | Easy |
+| Feature                | Description                                           | Complexity |
+| ---------------------- | ----------------------------------------------------- | ---------- |
+| **File uploads**       | Images/files in chat via Supabase Storage.            | Medium     |
+| **Push notifications** | Browser push API + service worker for offline alerts. | Hard       |
+| **Voice/video calls**  | WebRTC peer-to-peer calling. Needs signaling server.  | Hard       |
+| **Admin dashboard**    | Manage users, rooms, reports. Separate admin role.    | Medium     |
+| **Stripe payments**    | Real subscription billing for Verified badge.         | Medium     |
+| **Custom domains**     | Point `voxen.app` or similar to Vercel.               | Easy       |
 
 ### Priority 4 — Code Quality
 
-| Task | Description |
-|------|-------------|
+| Task                      | Description                                                                      |
+| ------------------------- | -------------------------------------------------------------------------------- |
 | **Split into components** | Break `VoxenApp.jsx` into `AuthPage`, `Sidebar`, `RoomView`, `ProfilePage`, etc. |
-| **State management** | Move from `useState` spaghetti to React Context or Zustand. |
-| **TypeScript migration** | Add type safety to props, Supabase queries, state. |
-| **CSS extraction** | Move from template literal CSS to CSS Modules or Tailwind. |
-| **Testing** | Add Vitest unit tests + Playwright E2E tests. |
-| **CI/CD** | GitHub Actions for lint + test + deploy pipeline. |
+| **State management**      | Move from `useState` spaghetti to React Context or Zustand.                      |
+| **TypeScript migration**  | Add type safety to props, Supabase queries, state.                               |
+| **CSS extraction**        | Move from template literal CSS to CSS Modules or Tailwind.                       |
+| **Testing**               | Add Vitest unit tests + Playwright E2E tests.                                    |
+| **CI/CD**                 | GitHub Actions for lint + test + deploy pipeline.                                |
 
 ---
 
