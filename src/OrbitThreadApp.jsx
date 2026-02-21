@@ -1935,22 +1935,42 @@ export default function OrbitThreadApp() {
 
     setLoginLoading(true);
     try {
+      // 15-second timeout to prevent infinite hang
+      const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Connection timed out. Check your internet and try again.")), 15000)
+      );
+
       if (authMode === "signup") {
         const initials = authName.trim().split(/\s+/).map(w => w[0]).join("").toUpperCase().slice(0, 2);
         const handle = "@" + authName.trim().toLowerCase().replace(/\s+/g, "");
-        const { error } = await supabase.auth.signUp({
-          email: email.trim(),
-          password: authPassword,
-          options: { data: { name: authName.trim(), handle, initials } },
-        });
+        const { data, error } = await Promise.race([
+          supabase.auth.signUp({
+            email: email.trim(),
+            password: authPassword,
+            options: { data: { name: authName.trim(), handle, initials } },
+          }),
+          timeout,
+        ]);
         if (error) { setAuthError(error.message); return; }
-        // Auth listener will handle profile load + redirect
+        // If email confirmation is required, signUp succeeds but session is null
+        if (data && !data.session) {
+          setAuthError("Check your email for a confirmation link, then sign in.");
+          return;
+        }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password: authPassword,
-        });
+        const { data, error } = await Promise.race([
+          supabase.auth.signInWithPassword({
+            email: email.trim(),
+            password: authPassword,
+          }),
+          timeout,
+        ]);
         if (error) { setAuthError(error.message); return; }
+        // If sign-in succeeds but no session returned (shouldn't happen, but safety net)
+        if (data && !data.session) {
+          setAuthError("Sign-in succeeded but no session was created. Try again or check your email for a confirmation link.");
+          return;
+        }
       }
     } catch (err) {
       console.error("Auth error:", err);
@@ -2024,7 +2044,7 @@ export default function OrbitThreadApp() {
                 <div className="fl">Password</div>
                 <input className="fi" type="password" placeholder={authMode === "signup" ? "Min 6 characters" : "Your password"} value={authPassword} onChange={e => setAuthPassword(e.target.value)} onKeyDown={e => e.key==="Enter" && login()} />
               </div>
-              {authError && <div style={{color:"#ff6b6b",fontSize:12,marginBottom:8,textAlign:"center"}}>{authError}</div>}
+              {authError && <div style={{color:"#ff6b6b",fontSize:13,marginBottom:10,textAlign:"center",padding:"10px 14px",background:"rgba(255,107,107,0.1)",borderRadius:8,border:"1px solid rgba(255,107,107,0.25)",lineHeight:1.5}}>{authError}</div>}
               <button className="btn-primary full" disabled={!email || !authPassword || loginLoading} onClick={login}>
                 {loginLoading ? "Signing in..." : authMode === "signup" ? "Create Account" : "Sign In"}
               </button>
